@@ -1,0 +1,42 @@
+/* Fix Food Card Layout */
+.food-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 🟢 text + price nicely positioned */
+    background: #fff;
+    border-radius: 15px;
+    padding: 10px;
+    height: auto; /* 🟢 Auto adjust height */
+    min-height: 420px; /* 🟢 Not cut */
+    box-sizing: border-box;
+}
+
+.food-item-image{
+    width: 100%;
+    border-radius: 15px  15px  0px  0px;
+}
+.food-item-img-container{
+    position: relative;
+}
+.food-item-img-container .add{
+    width: 35px;
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+.food-item-counter{
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border-radius: 50px;
+    background-color: white;   
+}
+.food-item-counter img{
+    width: 30px;
+}

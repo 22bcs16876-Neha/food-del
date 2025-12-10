@@ -28,15 +28,15 @@ app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 
 // ---------------- FRONTEND DEPLOYMENT (VITE BUILD) ----------------
-
 const __dirname = path.resolve();
 
-// Serve the Vite build folder (dist)
-app.use(express.static(path.join(__dirname, "dist")));
+// Serve Vite build inside frontend/dist
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
+
 
 // ------------------------------------------------------------------
 

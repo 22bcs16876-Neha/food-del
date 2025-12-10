@@ -9,22 +9,18 @@ import cartRouter from "./routes/cartRoute.js";
 import "dotenv/config";
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
-// Fix __dirname for ES Modules
+// Fix __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// PORT for deployment
-const PORT = process.env.PORT || 4000;
 
 // Middlewares
 app.use(express.json());
 app.use(cors());
+app.use("/images", express.static(path.join(__dirname, "uploads")));
 
-// Serve uploaded images
-app.use("/images", express.static("uploads"));
-
-// Connect Database
+// Connect DB
 connectDB();
 
 // API Routes
@@ -34,14 +30,16 @@ app.use("/api/cart", cartRouter);
 
 // ---------------- FRONTEND DEPLOYMENT ----------------
 
-// Serve frontend/dist
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+// Render par root = /opt/render/project/src
+const frontendPath = path.join(__dirname, "../frontend/dist");
+
+app.use(express.static(frontendPath));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// ---------------- START SERVER ----------------
+// ---------------- Start Server ----------------
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -145,11 +145,8 @@ const Add = ({ url }) => {
               required
             />
           </div>
-
         </div>
-
         <button type='submit' className='add-btn'>ADD</button>
-
       </form>
     </div>
   )

@@ -38,9 +38,15 @@ const onLogin = async (event) => {
       alert(response.data.message);
     }
   } catch (error) {
-    console.log(error);
-    alert("Something went wrong! Try again.");
-  }
+  console.log(error);
+
+  const msg =
+    error.response?.data?.message ||
+    "Signup failed. Try again.";
+
+  alert(msg);
+}
+
 };
 
   return (

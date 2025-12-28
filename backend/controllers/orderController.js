@@ -2,11 +2,17 @@ import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModels.js";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Stripe secret key missing");
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
+};
 
 // ================= PLACE ORDER =================
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:5174";
+  const stripe = getStripe();
 
   try {
     const newOrder = new orderModel({

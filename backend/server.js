@@ -6,19 +6,27 @@ import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/UserRoutes.js";
 import cartRouter from "./routes/cartRoute.js";
-import "dotenv/config";
 import orderRouter from "./routes/orderRoute.js";
+import dotenv from "dotenv";
+dotenv.config({ path: "./.env" });
+
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Fix __dirname in ES Modules
+// Fix __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://food-app.netlify.app",
+    "https://food-admin.netlify.app"
+  ],
+  credentials: true
+}));
 
 // Serve uploaded images
 app.use("/images", express.static(path.join(__dirname, "uploads")));
@@ -28,17 +36,21 @@ connectDB();
 
 // API Routes
 app.use("/api/food", foodRouter);
-app.use("/images",express.static('uploads'));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
-app.use("/api/order",orderRouter);
+app.use("/api/order", orderRouter);
 
-// Test Route
+// Health check
+app.get("/health", (req, res) => {
+  res.send("Backend is running fine 🚀");
+});
+
+// Root test
 app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-// Start Server
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

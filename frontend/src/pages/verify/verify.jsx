@@ -12,8 +12,7 @@ const Verify = () => {
   const success = searchParams.get("success");
   const orderId = searchParams.get("orderId");
 
-  const [status, setStatus] = useState("verifying"); 
-  // verifying | success | failed
+  const [status, setStatus] = useState("verifying");
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -26,16 +25,13 @@ const Verify = () => {
 
         if (res.data.success) {
           setStatus("success");
-
-          // ⏳ user ko success dikhao, phir redirect
           setTimeout(() => {
             navigate("/myorders");
-          }, 2000);
+          }, 2500);
         } else {
           setStatus("failed");
         }
       } catch (error) {
-        console.log("Verify error:", error);
         setStatus("failed");
       }
     };
@@ -46,27 +42,39 @@ const Verify = () => {
   }, [success, orderId, token, navigate, url]);
 
   return (
-    <div className="verify">
-      {status === "verifying" && (
-        <>
-          <div className="spinner"></div>
-          <p>Verifying payment, please wait...</p>
-        </>
-      )}
+    <div className="verify-page">
+      <div className="verify-card">
+        {status === "verifying" && (
+          <>
+            <div className="spinner"></div>
+            <h2>Verifying Payment</h2>
+            <p>Please wait while we confirm your order...</p>
+          </>
+        )}
 
-      {status === "success" && (
-        <>
-          <h2>🎉 Order Placed Successfully!</h2>
-          <p>You will be redirected to your orders shortly.</p>
-        </>
-      )}
+        {status === "success" && (
+          <>
+            <div className="icon success">✔</div>
+            <h2>Order Placed Successfully!</h2>
+            <p>
+              Your payment was successful.  
+              You’ll be redirected to your orders shortly.
+            </p>
+          </>
+        )}
 
-      {status === "failed" && (
-        <>
-          <h2>❌ Payment Failed</h2>
-          <button onClick={() => navigate("/")}>Go Home</button>
-        </>
-      )}
+        {status === "failed" && (
+          <>
+            <div className="icon failed">✖</div>
+            <h2>Payment Failed</h2>
+            <p>
+              Something went wrong.  
+              Please try again or place a new order.
+            </p>
+            <button onClick={() => navigate("/")}>Go Home</button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

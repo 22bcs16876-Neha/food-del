@@ -24,31 +24,33 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 
 // ================= CORS CONFIG (IMPORTANT) =================
+
 const allowedOrigins = [
-  "http://localhost:5173",              // frontend local
-  "http://localhost:5174",              // admin local
-  "https://tomato-meal.netlify.app",    // frontend live
-  "https://food-admin.netlify.app",     // admin live
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://tomato-meal.netlify.app",
+  "https://food-admin.netlify.app",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // allow Postman / server-to-server
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      // safe fallback (prevents deploy crash)
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"], // 🔥 FIX
-    credentials: true,
-  })
-);
+    }
+
+    return callback(null, false);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// 🔥 VERY IMPORTANT — handle preflight
+app.options("*", cors(corsOptions));
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

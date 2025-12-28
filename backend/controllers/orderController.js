@@ -2,6 +2,7 @@ import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModels.js";
 import Stripe from "stripe";
 
+// ================= STRIPE INSTANCE =================
 const getStripe = () => {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe secret key missing");
@@ -11,8 +12,10 @@ const getStripe = () => {
 
 // ================= PLACE ORDER =================
 const placeOrder = async (req, res) => {
-  const frontend_url = "http://localhost:5174";
   const stripe = getStripe();
+
+  // ✅ IMPORTANT: frontend URL from ENV (NOT localhost)
+  const frontend_url = process.env.FRONTEND_URL;
 
   try {
     const newOrder = new orderModel({
@@ -25,10 +28,12 @@ const placeOrder = async (req, res) => {
 
     await newOrder.save();
 
+    // clear cart
     await userModel.findByIdAndUpdate(req.body.userId, {
       cartData: {},
     });
 
+    // stripe items
     const line_items = req.body.items.map((item) => ({
       price_data: {
         currency: "inr",
@@ -38,6 +43,7 @@ const placeOrder = async (req, res) => {
       quantity: item.quantity,
     }));
 
+    // delivery charges
     line_items.push({
       price_data: {
         currency: "inr",
@@ -47,6 +53,7 @@ const placeOrder = async (req, res) => {
       quantity: 1,
     });
 
+    // stripe session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items,
@@ -56,7 +63,7 @@ const placeOrder = async (req, res) => {
 
     res.json({ success: true, session_url: session.url });
   } catch (error) {
-    console.log(error);
+    console.log("❌ PLACE ORDER ERROR:", error);
     res.status(500).json({ success: false, message: "Order failed" });
   }
 };
@@ -74,7 +81,7 @@ const verifyOrder = async (req, res) => {
       res.json({ success: false, message: "Payment failed" });
     }
   } catch (error) {
-    console.log(error);
+    console.log("❌ VERIFY ERROR:", error);
     res.status(500).json({ success: false, message: "Verification failed" });
   }
 };
@@ -106,10 +113,9 @@ const listOrders = async (req, res) => {
 // ================= UPDATE STATUS =================
 const updateStatus = async (req, res) => {
   try {
-    await orderModel.findByIdAndUpdate(
-      req.body.orderId,
-      { status: req.body.status }
-    );
+    await orderModel.findByIdAndUpdate(req.body.orderId, {
+      status: req.body.status,
+    });
     res.json({ success: true, message: "Status Updated" });
   } catch (error) {
     console.log(error);
@@ -117,7 +123,6 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// ✅ EXPORTS
 export {
   placeOrder,
   verifyOrder,

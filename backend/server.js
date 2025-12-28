@@ -48,8 +48,6 @@ app.use(
   })
 );
 
-// Preflight support
-app.options("*", cors());
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

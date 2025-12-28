@@ -46,11 +46,9 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
-
 app.use(cors(corsOptions));
+app.options("/*", cors(corsOptions)); // ✅ FIXED
 
-// 🔥 VERY IMPORTANT — handle preflight
-app.options("*", cors(corsOptions));
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

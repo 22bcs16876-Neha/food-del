@@ -63,7 +63,7 @@ app.use("/api/order", orderRouter);
 
 // ================= TEST ROUTES =================
 app.get("/health", (req, res) => {
-  res.status(200).send("Backend is running fine 🚀");
+  res.status(200).send("Backend is running fine ");
 });
 
 app.get("/", (req, res) => {
@@ -72,5 +72,5 @@ app.get("/", (req, res) => {
 
 // ================= START SERVER =================
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

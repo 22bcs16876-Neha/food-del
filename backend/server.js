@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
+// routes
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/UserRoutes.js";
@@ -22,12 +23,12 @@ const __dirname = path.dirname(__filename);
 // ================= MIDDLEWARES =================
 app.use(express.json());
 
-// ================= CORS CONFIG =================
+// ================= CORS CONFIG (IMPORTANT) =================
 const allowedOrigins = [
-  "http://localhost:5173",            // frontend local
-  "http://localhost:5174",            // admin local
-  "https://tomato-meal.netlify.app",  // frontend live
-  "https://food-admin.netlify.app"    // admin live
+  "http://localhost:5173",              // frontend local
+  "http://localhost:5174",              // admin local
+  "https://tomato-meal.netlify.app",    // frontend live
+  "https://food-admin.netlify.app",     // admin live
 ];
 
 app.use(
@@ -37,17 +38,17 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true); // ❗ safe mode (avoid deploy crash)
+        return callback(null, true);
       }
+
+      // safe fallback (prevents deploy crash)
+      return callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "token"],
+    allowedHeaders: ["Content-Type", "Authorization"], // 🔥 FIX
     credentials: true,
   })
 );
-
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));
@@ -61,9 +62,12 @@ app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// ================= TEST ROUTES =================
+// ================= HEALTH CHECK =================
 app.get("/health", (req, res) => {
-  res.status(200).send("Backend is running fine ");
+  res.status(200).json({
+    success: true,
+    message: "Backend is running fine 🚀",
+  });
 });
 
 app.get("/", (req, res) => {
@@ -72,5 +76,5 @@ app.get("/", (req, res) => {
 
 // ================= START SERVER =================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });

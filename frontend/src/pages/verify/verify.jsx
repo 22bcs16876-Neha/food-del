@@ -23,23 +23,25 @@ const Verify = () => {
           { headers: { token } }
         );
 
-        if (res.data.success) {
+        console.log("VERIFY API RESPONSE:", res.data);
+
+        if (res.data.success === true) {
           setStatus("success");
-          setTimeout(() => {
-            navigate("/myorders");
-          }, 2500);
+          setTimeout(() => navigate("/myorders"), 2000);
         } else {
           setStatus("failed");
         }
       } catch (error) {
+        console.log("VERIFY ERROR:", error);
         setStatus("failed");
       }
     };
 
-    if (token && orderId) {
+    // ✅ IMPORTANT FIX
+    if (orderId) {
       verifyPayment();
     }
-  }, [success, orderId, token, navigate, url]);
+  }, [success, orderId, navigate, url, token]);
 
   return (
     <div className="verify-page">
@@ -56,10 +58,7 @@ const Verify = () => {
           <>
             <div className="icon success">✔</div>
             <h2>Order Placed Successfully!</h2>
-            <p>
-              Your payment was successful.  
-              You’ll be redirected to your orders shortly.
-            </p>
+            <p>You’ll be redirected to your orders shortly.</p>
           </>
         )}
 
@@ -67,10 +66,7 @@ const Verify = () => {
           <>
             <div className="icon failed">✖</div>
             <h2>Payment Failed</h2>
-            <p>
-              Something went wrong.  
-              Please try again or place a new order.
-            </p>
+            <p>Please try again.</p>
             <button onClick={() => navigate("/")}>Go Home</button>
           </>
         )}

@@ -7,7 +7,7 @@ import "./verify.css";
 const Verify = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { url } = useContext(StoreContext);
+  const { url, token } = useContext(StoreContext); // ✅ token added
 
   const success = searchParams.get("success");
   const orderId = searchParams.get("orderId");
@@ -15,25 +15,27 @@ const Verify = () => {
   useEffect(() => {
     const verifyPayment = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const res = await axios.post(url + "/api/order/verify", {
-          success,
-          orderId,
-        });
+        const res = await axios.post(
+          `${url}/api/order/verify`,
+          { success, orderId },
+          { headers: { token } } // ✅ IMPORTANT
+        );
 
         if (res.data.success) {
-          navigate("/orders");
+          navigate("/myorders"); // ✅ correct route
         } else {
           navigate("/");
         }
-      } catch {
+      } catch (error) {
+        console.log("Verify error:", error);
         navigate("/");
       }
     };
 
-    verifyPayment();
-  }, [success, orderId, navigate, url]);
+    if (token && orderId) {
+      verifyPayment();
+    }
+  }, [success, orderId, token, navigate, url]);
 
   return (
     <div className="verify">

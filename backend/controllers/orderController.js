@@ -102,7 +102,7 @@ const verifyOrder = async (req, res) => {
       });
     }
 
-    if (success === "true") {
+   if (success === true || success === "true") {
       order.payment = true;
       await order.save();
       return res.json({ success: true, message: "Payment verified" });

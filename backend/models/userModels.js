@@ -7,5 +7,5 @@
     cartData:{type:Object,default:{}}
  },{minimize:false})
 
- const userModel = mongoose.models.user || mongoose.model("user",userSchema);
+const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);
  export default userModel;

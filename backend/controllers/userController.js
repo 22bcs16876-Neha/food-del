@@ -5,6 +5,9 @@ import validator from "validator";
 
 /* ===================== CREATE TOKEN ===================== */
 const createToken = (id) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET not defined");
+  }
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
@@ -13,7 +16,6 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check required fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -38,10 +40,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = createToken(user._id);
-    res.status(200).json({
-      success: true,
-      token,
-    });
+    res.status(200).json({ success: true, token });
   } catch (error) {
     console.log("LOGIN ERROR:", error.message);
     res.status(500).json({
@@ -56,7 +55,6 @@ const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // ✅ REQUIRED FIELD CHECK (MOST IMPORTANT FIX)
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -64,7 +62,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Email format check
     if (!validator.isEmail(email)) {
       return res.status(400).json({
         success: false,
@@ -72,7 +69,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Password strength check
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
@@ -80,7 +76,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check existing user
     const exists = await userModel.findOne({ email });
     if (exists) {
       return res.status(400).json({
@@ -89,24 +84,16 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const newUser = new userModel({
+    const user = await new userModel({
       name,
       email,
       password: hashedPassword,
-    });
+    }).save();
 
-    const user = await newUser.save();
     const token = createToken(user._id);
-
-    res.status(201).json({
-      success: true,
-      token,
-    });
+    res.status(201).json({ success: true, token });
   } catch (error) {
     console.log("REGISTER ERROR:", error.message);
     res.status(500).json({

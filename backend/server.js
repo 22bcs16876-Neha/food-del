@@ -20,13 +20,20 @@ const __dirname = path.dirname(__filename);
 
 // Middlewares
 app.use(express.json());
+
 app.use(cors({
   origin: [
+    "http://localhost:5173",
     "https://food-app.netlify.app",
     "https://food-admin.netlify.app"
   ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "token"],
   credentials: true
 }));
+
+app.options("*", cors());
+
 
 // Serve uploaded images
 app.use("/images", express.static(path.join(__dirname, "uploads")));

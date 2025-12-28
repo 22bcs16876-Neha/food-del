@@ -21,18 +21,28 @@ const __dirname = path.dirname(__filename);
 // Middlewares
 app.use(express.json());
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://food-app.netlify.app",
-    "https://food-admin.netlify.app"
-  ],
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://food-app.netlify.app",
+      "https://food-admin.netlify.app"
+    ];
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "token"],
   credentials: true
-}));
+};
 
-app.options("*", cors());
+app.use(cors(corsOptions));
 
 
 // Serve uploaded images

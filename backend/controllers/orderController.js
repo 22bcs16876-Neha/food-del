@@ -96,28 +96,25 @@ const verifyOrder = async (req, res) => {
 
     const order = await orderModel.findById(orderId);
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
+      return res.json({ success: false, message: "Order not found" });
     }
 
-   if (success === true || success === "true") {
+    if (success === true || success === "true") {
       order.payment = true;
       await order.save();
-      return res.json({ success: true, message: "Payment verified" });
+      return res.json({ success: true });
     } else {
       await orderModel.findByIdAndDelete(orderId);
-      return res.json({ success: false, message: "Payment failed" });
+      return res.json({ success: false });
     }
   } catch (error) {
-    console.log("❌ VERIFY ERROR:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Verification failed",
-    });
+    console.log("VERIFY ERROR:", error);
+    return res.json({ success: false });
   }
 };
+
+export { verifyOrder };
+
 
 // ================= USER ORDERS =================
 const userOrders = async (req, res) => {

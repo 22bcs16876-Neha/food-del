@@ -2,21 +2,40 @@ import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModels.js";
 import Stripe from "stripe";
 
-// ================= STRIPE =================
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 // ================= PLACE ORDER =================
 const placeOrder = async (req, res) => {
   try {
-    const userId = req.user.id; // ✅ secure
+    // 🔐 auth middleware se aata hai
+    const userId = req.user.id;
+
+    // 🔴 ENV checks (VERY IMPORTANT)
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "Stripe secret key missing",
+      });
+    }
+
+    if (!process.env.FRONTEND_URL) {
+      return res.status(500).json({
+        success: false,
+        message: "Frontend URL missing",
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const frontend_url = process.env.FRONTEND_URL;
 
     const { items, amount, address } = req.body;
 
     if (!items || items.length === 0) {
-      return res.status(400).json({ success: false, message: "Cart empty" });
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty",
+      });
     }
 
+    // create order
     const newOrder = new orderModel({
       userId,
       items,
@@ -30,7 +49,7 @@ const placeOrder = async (req, res) => {
     // clear cart
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    // stripe items
+    // stripe line items
     const line_items = items.map((item) => ({
       price_data: {
         currency: "inr",
@@ -40,7 +59,7 @@ const placeOrder = async (req, res) => {
       quantity: item.quantity,
     }));
 
-    // delivery fee (₹49)
+    // delivery fee
     line_items.push({
       price_data: {
         currency: "inr",
@@ -57,10 +76,16 @@ const placeOrder = async (req, res) => {
       cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
     });
 
-    res.json({ success: true, session_url: session.url });
+    return res.json({
+      success: true,
+      session_url: session.url,
+    });
   } catch (error) {
-    console.log("❌ PLACE ORDER ERROR:", error);
-    res.status(500).json({ success: false, message: "Order failed" });
+    console.log("❌ PLACE ORDER ERROR:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Order failed",
+    });
   }
 };
 
@@ -71,7 +96,10 @@ const verifyOrder = async (req, res) => {
 
     const order = await orderModel.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
     if (success === "true") {
@@ -83,8 +111,11 @@ const verifyOrder = async (req, res) => {
       return res.json({ success: false, message: "Payment failed" });
     }
   } catch (error) {
-    console.log("❌ VERIFY ERROR:", error);
-    res.status(500).json({ success: false, message: "Verification failed" });
+    console.log("❌ VERIFY ERROR:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Verification failed",
+    });
   }
 };
 
@@ -93,9 +124,12 @@ const userOrders = async (req, res) => {
   try {
     const userId = req.user.id;
     const orders = await orderModel.find({ userId });
-    res.json({ success: true, data: orders });
+    return res.json({ success: true, data: orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching orders" });
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+    });
   }
 };
 
@@ -103,9 +137,12 @@ const userOrders = async (req, res) => {
 const listOrders = async (req, res) => {
   try {
     const orders = await orderModel.find({});
-    res.json({ success: true, data: orders });
+    return res.json({ success: true, data: orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching orders" });
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+    });
   }
 };
 
@@ -114,9 +151,12 @@ const updateStatus = async (req, res) => {
     await orderModel.findByIdAndUpdate(req.body.orderId, {
       status: req.body.status,
     });
-    res.json({ success: true, message: "Status Updated" });
+    return res.json({ success: true, message: "Status updated" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating status" });
+    return res.status(500).json({
+      success: false,
+      message: "Error updating status",
+    });
   }
 };
 

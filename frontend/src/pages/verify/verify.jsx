@@ -23,15 +23,18 @@ const Verify = () => {
           { headers: { token } }
         );
 
-        if (res.data.success) {
+        console.log("VERIFY RESPONSE:", res.data);
+
+        if (res.data.success === true) {
           setStatus("success");
           setTimeout(() => {
             navigate("/myorders");
-          }, 2500);
+          }, 2000);
         } else {
           setStatus("failed");
         }
       } catch (error) {
+        console.log("Verify error:", error);
         setStatus("failed");
       }
     };
@@ -43,38 +46,9 @@ const Verify = () => {
 
   return (
     <div className="verify-page">
-      <div className="verify-card">
-        {status === "verifying" && (
-          <>
-            <div className="spinner"></div>
-            <h2>Verifying Payment</h2>
-            <p>Please wait while we confirm your order...</p>
-          </>
-        )}
-
-        {status === "success" && (
-          <>
-            <div className="icon success">✔</div>
-            <h2>Order Placed Successfully!</h2>
-            <p>
-              Your payment was successful.  
-              You’ll be redirected to your orders shortly.
-            </p>
-          </>
-        )}
-
-        {status === "failed" && (
-          <>
-            <div className="icon failed">✖</div>
-            <h2>Payment Failed</h2>
-            <p>
-              Something went wrong.  
-              Please try again or place a new order.
-            </p>
-            <button onClick={() => navigate("/")}>Go Home</button>
-          </>
-        )}
-      </div>
+      {status === "verifying" && <p>Verifying payment...</p>}
+      {status === "success" && <p>🎉 Order placed successfully!</p>}
+      {status === "failed" && <p>❌ Payment failed</p>}
     </div>
   );
 };

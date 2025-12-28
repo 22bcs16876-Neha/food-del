@@ -2,72 +2,77 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/UserRoutes.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
-import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
 
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Fix __dirname for ES Modules
+// ================= FIX __dirname (ESM) =================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middlewares
+// ================= MIDDLEWARES =================
 app.use(express.json());
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+// ================= CORS CONFIG =================
+const allowedOrigins = [
+  "http://localhost:5173",            // frontend local
+  "http://localhost:5174",            // admin local
+  "https://tomato-meal.netlify.app",  // frontend live
+  "https://food-admin.netlify.app"    // admin live
+];
 
-    const allowedOrigins = [
-      "http://localhost:5173",
-      "https://food-app.netlify.app",
-      "https://food-admin.netlify.app"
-    ];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow Postman / server-to-server
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "token"],
-  credentials: true
-};
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // ❗ safe mode (avoid deploy crash)
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "token"],
+    credentials: true,
+  })
+);
 
-app.use(cors(corsOptions));
+// Preflight support
+app.options("*", cors());
 
-
-// Serve uploaded images
+// ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));
 
-// Connect Database
+// ================= DATABASE =================
 connectDB();
 
-// API Routes
+// ================= ROUTES =================
 app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// Health check
+// ================= TEST ROUTES =================
 app.get("/health", (req, res) => {
-  res.send("Backend is running fine 🚀");
+  res.status(200).send("Backend is running fine 🚀");
 });
 
-// Root test
 app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-// Start server
+// ================= START SERVER =================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

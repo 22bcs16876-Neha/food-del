@@ -24,19 +24,22 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 
 // ================= CORS (FINAL & CORRECT) =================
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+].filter(Boolean); // 🔥 VERY IMPORTANT
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    process.env.ADMIN_URL,
-    "http://localhost:5173",
-    "http://localhost:5174"
-  ],
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
 
 app.options("*", cors());
+
 
 
 

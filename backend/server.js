@@ -26,16 +26,18 @@ app.use(express.json());
 // ================= CORS (FINAL & CORRECT) =================
 app.use(cors({
   origin: [
+    process.env.FRONTEND_URL,
+    process.env.ADMIN_URL,
     "http://localhost:5173",
-    "http://localhost:5174",
-    "https://tomato-meal.netlify.app",
-    "https://tomato-meal-admin.netlify.app"
+    "http://localhost:5174"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
+
 app.options("*", cors());
+
 
 
 

@@ -37,7 +37,6 @@ const Verify = () => {
       }
     };
 
-    // ✅ IMPORTANT FIX
     if (orderId) {
       verifyPayment();
     }

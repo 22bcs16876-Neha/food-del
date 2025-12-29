@@ -15,15 +15,16 @@ const MyOrders = () => {
   setLoading(true);
   setError("");
   try {
-    const response = await axios.post(
-      `${url}/api/order/userorders`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+const response = await axios.post(
+  `${url}/api/order/userorders`,
+  {},
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
     setOrders(response.data.data || []);
   } catch (error) {
     console.error(error);

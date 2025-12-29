@@ -49,7 +49,7 @@
 .status.delivered {
   color: #2e7d32;
 }
-
+/* 
 .track-btn {
   border: none;
   background-color: #fde2e2;
@@ -61,6 +61,18 @@
 
 .track-btn:hover {
   background-color: #fbcaca;
+} */
+.track-btn {
+  padding: 8px 14px;
+  border: none;
+  background: #ffe4e1;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.track-btn:hover {
+  background: #ffb3aa;
 }
 
 @media (max-width: 900px) {

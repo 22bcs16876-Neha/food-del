@@ -30,13 +30,14 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "https://tomato-meal.netlify.app",
-      "https://food-admin.netlify.app",
+      "https://tomato-meal-admin.netlify.app" // ✅ THIS WAS MISSING
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

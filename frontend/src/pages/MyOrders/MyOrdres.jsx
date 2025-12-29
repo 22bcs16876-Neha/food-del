@@ -68,7 +68,9 @@ const response = await axios.post(
               <p className={`status ${order.status?.toLowerCase() || "delivered"}`}>
                 ● {order.status || "Delivered"}
               </p>
-              <button className="track-btn">Track Order</button>
+<button onClick={() => navigate(`/track/${order._id}`)}>
+  Track Order
+</button>
             </div>
           ))
         )}

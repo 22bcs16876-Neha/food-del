@@ -6,7 +6,7 @@ import { assets } from "../../assets/assets";
 
 const Orders = () => {
   // ✅ Backend URL from ENV
-  const url = import.meta.env.VITE_API_URL;
+const url = import.meta.env.VITE_BACKEND_URL;
 
   const [orders, setOrders] = useState([]);
 

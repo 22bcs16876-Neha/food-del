@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Orders.css";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
 
-const Orders = () => {
-  // ✅ Backend URL from ENV
-const url = import.meta.env.VITE_API_URL;
-
+const Orders = ({ url }) => {
   const [orders, setOrders] = useState([]);
 
   /* ================= FETCH ALL ORDERS ================= */
@@ -26,7 +23,7 @@ const url = import.meta.env.VITE_API_URL;
     }
   };
 
-  /* ================= UPDATE STATUS ================= */
+  /* ================= UPDATE ORDER STATUS ================= */
   const statusHandler = async (e, orderId) => {
     try {
       const res = await axios.post(`${url}/api/order/status`, {
@@ -36,7 +33,7 @@ const url = import.meta.env.VITE_API_URL;
 
       if (res.data.success) {
         toast.success("Order status updated ✅");
-        fetchAllOrders();
+        fetchAllOrders(); // refresh orders
       } else {
         toast.error("Failed to update status ❌");
       }
@@ -59,7 +56,10 @@ const url = import.meta.env.VITE_API_URL;
         {orders.map((order) => (
           <div key={order._id} className="order-item">
 
-            <img src={assets.parcel_icon} alt="parcel" />
+            <img
+              src={assets.parcel_icon}
+              alt="Order parcel"
+            />
 
             <div className="order-item-details">
 

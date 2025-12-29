@@ -1,12 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./List.css";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
-const List = () => {
-  // ✅ Backend URL from ENV
-  const url = import.meta.env.VITE_API_URL;
-
+const List = ({ url }) => {
   const [list, setList] = useState([]);
 
   /* ================= FETCH FOOD LIST ================= */
@@ -34,7 +31,7 @@ const List = () => {
 
       if (res.data.success) {
         toast.success(res.data.message || "Food removed ✅");
-        fetchList();
+        fetchList(); // refresh list
       } else {
         toast.error("Failed to remove food ❌");
       }
@@ -75,7 +72,7 @@ const List = () => {
               className="cursor"
               onClick={() => removeFood(item._id)}
             >
-              X
+              ❌
             </p>
           </div>
         ))}

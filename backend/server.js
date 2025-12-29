@@ -29,7 +29,7 @@ const allowedOrigins = [
   process.env.ADMIN_URL,
   "http://localhost:5173",
   "http://localhost:5174",
-].filter(Boolean); // 🔥 VERY IMPORTANT
+].filter(Boolean);
 
 app.use(cors({
   origin: allowedOrigins,
@@ -38,7 +38,8 @@ app.use(cors({
   credentials: true,
 }));
 
-app.options("*", cors());
+
+// app.options("*", cors());
 
 
 

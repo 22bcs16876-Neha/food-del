@@ -24,30 +24,36 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 
 // ================= CORS =================
-const allowedOrigins = [
-  "https://tomato-meal.netlify.app",
-  "https://tomato-meal-admin.netlify.app",
-  "http://localhost:5173",
-  "http://localhost:5174",
-];
-
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
+  const allowedOrigins = [
+    "https://tomato-meal.netlify.app",
+    "https://tomato-meal-admin.netlify.app",
+    "http://localhost:5173",
+    "http://localhost:5174",
+  ];
 
+  const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, token"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // 🔥 THIS FIXES PREFLIGHT
+    return res.sendStatus(200);
   }
 
   next();
 });
+
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

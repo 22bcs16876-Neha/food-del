@@ -12,22 +12,26 @@ const MyOrders = () => {
 
   // 🔹 Fetch user orders
   const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await axios.post(
-        `${url}/api/order/userorders`,
-        {},
-        { headers: { token } }
-      );
-      setOrders(response.data.data || []);
-    } catch (error) {
-      console.error(error);
-      setError("Failed to load orders. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [url, token]);
+  setLoading(true);
+  setError("");
+  try {
+    const response = await axios.post(
+      `${url}/api/order/userorders`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    setOrders(response.data.data || []);
+  } catch (error) {
+    console.error(error);
+    setError("Failed to load orders. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+}, [url, token]);
 
   // 🔹 Call API when token is available
   useEffect(() => {

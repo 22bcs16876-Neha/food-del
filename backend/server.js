@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 // routes
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
-import userRouter from "./routes/UserRoutes.js";
+import userRouter from "./routes/userRoute.js"; 
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 // ================= MIDDLEWARES =================
 app.use(express.json());
 
-// ================= CORS (FINAL & CORRECT) =================
+// ================= CORS =================
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.ADMIN_URL,
@@ -37,13 +37,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
-
-
-// app.options("*", cors());
-
-
-
-
 
 // ================= STATIC FILES =================
 app.use("/images", express.static(path.join(__dirname, "uploads")));

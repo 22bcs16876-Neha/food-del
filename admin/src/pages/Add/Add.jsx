@@ -1,12 +1,14 @@
 import { useState } from "react";
-import "./Add.css";
-import { assets } from "../../assets/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
+import "./Add.css";
+import { assets } from "../../assets/assets";
 
 const Add = () => {
-  const url = import.meta.env.VITE_BACKEND_URL;
+  // ✅ Backend URL (ENV based)
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
+  // ================= STATE =================
   const [image, setImage] = useState(null);
   const [data, setData] = useState({
     name: "",
@@ -15,19 +17,29 @@ const Add = () => {
     category: "Salad",
   });
 
-
-  // input / select / textarea handler
+  // ================= HANDLERS =================
   const onChangeHandler = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // submit handler
+  // ================= SUBMIT =================
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
+    // 🔐 Safety checks
+    if (!BACKEND_URL) {
+      toast.error("API URL not configured ❌");
+      return;
+    }
+
     if (!image) {
       toast.error("Please upload an image 🖼️");
+      return;
+    }
+
+    if (!data.name || !data.description || !data.price) {
+      toast.error("All fields are required ❌");
       return;
     }
 
@@ -39,21 +51,20 @@ const Add = () => {
       formData.append("category", data.category);
       formData.append("image", image);
 
-const response = await axios.post(
-  `${url}/api/food/add`,
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }
-);
+      const res = await axios.post(
+        `${BACKEND_URL}/api/food/add`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
+      if (res.data?.success) {
+        toast.success("Food added successfully ✅");
 
-      if (response.data.success) {
-        toast.success(response.data.message);
-
-        // reset form
+        // reset
         setData({
           name: "",
           description: "",
@@ -62,19 +73,18 @@ const response = await axios.post(
         });
         setImage(null);
       } else {
-        toast.error(response.data.message);
+        toast.error(res.data?.message || "Server error ❌");
       }
-
     } catch (error) {
-      console.error(error);
+      console.error("ADD FOOD ERROR:", error);
       toast.error("Server error ❌");
     }
   };
 
+  // ================= UI =================
   return (
     <div className="add">
       <form className="flex-col" onSubmit={onSubmitHandler}>
-
         {/* IMAGE UPLOAD */}
         <div className="add-img-upload flex-col">
           <p>Upload Image</p>
@@ -123,7 +133,6 @@ const response = await axios.post(
 
         {/* CATEGORY & PRICE */}
         <div className="add-category-price">
-
           <div className="add-category flex-col">
             <p>Product category</p>
             <select
@@ -153,7 +162,6 @@ const response = await axios.post(
               required
             />
           </div>
-
         </div>
 
         <button type="submit" className="add-btn">

@@ -4,7 +4,8 @@ import { assets } from "../../assets/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const Add = ({ url }) => {
+const Add = () => {
+  const url = import.meta.env.VITE_BACKEND_URL;
 
   const [image, setImage] = useState(null);
   const [data, setData] = useState({
@@ -13,6 +14,7 @@ const Add = ({ url }) => {
     price: "",
     category: "Salad",
   });
+
 
   // input / select / textarea handler
   const onChangeHandler = (e) => {
@@ -37,10 +39,16 @@ const Add = ({ url }) => {
       formData.append("category", data.category);
       formData.append("image", image);
 
-      const response = await axios.post(
-        `${url}/api/food/add`,
-        formData
-      );
+const response = await axios.post(
+  `${url}/api/food/add`,
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
+
 
       if (response.data.success) {
         toast.success(response.data.message);

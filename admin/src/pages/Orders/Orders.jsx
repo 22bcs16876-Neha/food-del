@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "./Orders.css";
 import { toast } from "react-toastify";
@@ -6,21 +6,25 @@ import { assets } from "../../assets/assets";
 
 const Orders = ({ url }) => {
   const [orders, setOrders] = useState([]);
-
-  // 🔐 Get Admin Token
   const token = localStorage.getItem("token");
+
+  // ✅ Axios instance (clean & reusable)
+  const api = useMemo(() => {
+    return axios.create({
+      baseURL: url,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }, [url, token]);
 
   /* ================= FETCH ALL ORDERS ================= */
   const fetchAllOrders = async () => {
     try {
-      const res = await axios.get(`${url}/api/order/list`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get("/api/order/list");
 
-      if (res.data.success) {
-        setOrders(res.data.data);
+      if (res.data?.success) {
+        setOrders(res.data.data || []);
       } else {
         toast.error("Unable to fetch orders ❌");
       }
@@ -31,22 +35,14 @@ const Orders = ({ url }) => {
   };
 
   /* ================= UPDATE ORDER STATUS ================= */
-  const statusHandler = async (e, orderId) => {
+  const statusHandler = async (orderId, status) => {
     try {
-      const res = await axios.post(
-        `${url}/api/order/status`,
-        {
-          orderId,
-          status: e.target.value,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await api.post("/api/order/status", {
+        orderId,
+        status,
+      });
 
-      if (res.data.success) {
+      if (res.data?.success) {
         toast.success("Order status updated ✅");
         fetchAllOrders();
       } else {
@@ -60,12 +56,18 @@ const Orders = ({ url }) => {
 
   /* ================= INITIAL LOAD ================= */
   useEffect(() => {
+    if (!url) {
+      toast.error("API URL not configured ❌");
+      return;
+    }
+
     if (!token) {
       toast.error("Admin not logged in ❌");
       return;
     }
+
     fetchAllOrders();
-  }, []);
+  }, [url, token]); // ✅ correct deps
 
   return (
     <div className="order add">
@@ -77,7 +79,6 @@ const Orders = ({ url }) => {
         ) : (
           orders.map((order) => (
             <div key={order._id} className="order-item">
-
               {/* PARCEL ICON */}
               <img
                 src={assets.parcel_icon}
@@ -86,7 +87,6 @@ const Orders = ({ url }) => {
               />
 
               <div className="order-item-details">
-
                 {/* FOOD ITEMS */}
                 <p className="order-item-food">
                   {order.items.map((item, index) => (
@@ -123,13 +123,14 @@ const Orders = ({ url }) => {
                 {/* STATUS DROPDOWN */}
                 <select
                   value={order.status}
-                  onChange={(e) => statusHandler(e, order._id)}
+                  onChange={(e) =>
+                    statusHandler(order._id, e.target.value)
+                  }
                 >
                   <option value="Food Processing">Food Processing</option>
                   <option value="Out For Delivery">Out For Delivery</option>
                   <option value="Delivered">Delivered</option>
                 </select>
-
               </div>
             </div>
           ))

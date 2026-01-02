@@ -5,7 +5,6 @@ import "./Add.css";
 import { assets } from "../../assets/assets";
 
 const Add = () => {
-  // ✅ Backend URL (ENV based)
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   // ================= STATE =================
@@ -156,7 +155,7 @@ const Add = () => {
             <input
               type="number"
               name="price"
-              placeholder="₹20"
+              placeholder="₹00"
               value={data.price}
               onChange={onChangeHandler}
               required

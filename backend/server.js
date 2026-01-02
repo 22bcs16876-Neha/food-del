@@ -1,13 +1,11 @@
 import express from "express";
-import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
-// routes
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
-import userRouter from "./routes/userRoute.js"; 
+import userRouter from "./routes/userRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 
@@ -16,14 +14,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ================= FIX __dirname (ESM) =================
+// ===== fix __dirname (ESM) =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ================= MIDDLEWARES =================
+// ===== middlewares =====
 app.use(express.json());
 
-// ================= CORS =================
+// ===== CORS =====
 app.use((req, res, next) => {
   const allowedOrigins = [
     "https://tomato-meal.netlify.app",
@@ -39,7 +37,7 @@ app.use((req, res, next) => {
 
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, token"
+    "Content-Type, Authorization"
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -47,39 +45,27 @@ app.use((req, res, next) => {
   );
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
+  if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
+// ===== STATIC IMAGES =====
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ================= STATIC FILES =================
-app.use("/images", express.static(path.join(__dirname, "uploads")));
-
-// ================= DATABASE =================
+// ===== DB =====
 connectDB();
 
-// ================= ROUTES =================
+// ===== ROUTES =====
 app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// ================= HEALTH CHECK =================
+// ===== health =====
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Backend is running fine 🚀",
-  });
+  res.json({ success: true, message: "Backend running 🚀" });
 });
 
-app.get("/", (req, res) => {
-  res.send("API Working");
-});
-
-// ================= START SERVER =================
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });

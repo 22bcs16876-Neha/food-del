@@ -8,13 +8,13 @@ const Orders = ({ url }) => {
   const [orders, setOrders] = useState([]);
   const token = localStorage.getItem("token");
 
-  // ✅ Axios instance (clean & reusable)
+  // Axios instance
   const api = useMemo(() => {
     return axios.create({
       baseURL: url,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: token
+        ? { Authorization: `Bearer ${token}` }
+        : {},
     });
   }, [url, token]);
 
@@ -26,11 +26,11 @@ const Orders = ({ url }) => {
       if (res.data?.success) {
         setOrders(res.data.data || []);
       } else {
-        toast.error("Unable to fetch orders ❌");
+        toast.error("Server error ❌");
       }
     } catch (error) {
       console.error("FETCH ORDERS ERROR:", error);
-      toast.error("Unauthorized / Server error ❌");
+      toast.error("Server error ❌");
     }
   };
 
@@ -46,11 +46,11 @@ const Orders = ({ url }) => {
         toast.success("Order status updated ✅");
         fetchAllOrders();
       } else {
-        toast.error("Failed to update status ❌");
+        toast.error("Server error ❌");
       }
     } catch (error) {
       console.error("STATUS UPDATE ERROR:", error);
-      toast.error("Unauthorized / Server error ❌");
+      toast.error("Server error ❌");
     }
   };
 
@@ -61,13 +61,9 @@ const Orders = ({ url }) => {
       return;
     }
 
-    if (!token) {
-      toast.error("Admin not logged in ❌");
-      return;
-    }
-
+   
     fetchAllOrders();
-  }, [url, token]); // ✅ correct deps
+  }, [url]); // token dependency removed intentionally
 
   return (
     <div className="order add">
@@ -79,7 +75,6 @@ const Orders = ({ url }) => {
         ) : (
           orders.map((order) => (
             <div key={order._id} className="order-item">
-              {/* PARCEL ICON */}
               <img
                 src={assets.parcel_icon}
                 alt="Order parcel"
@@ -87,7 +82,6 @@ const Orders = ({ url }) => {
               />
 
               <div className="order-item-details">
-                {/* FOOD ITEMS */}
                 <p className="order-item-food">
                   {order.items.map((item, index) => (
                     <span key={index}>
@@ -97,12 +91,10 @@ const Orders = ({ url }) => {
                   ))}
                 </p>
 
-                {/* CUSTOMER NAME */}
                 <p className="order-item-name">
                   {order.address.firstname} {order.address.lastname}
                 </p>
 
-                {/* ADDRESS */}
                 <div className="order-item-address">
                   <p>{order.address.street},</p>
                   <p>
@@ -111,16 +103,13 @@ const Orders = ({ url }) => {
                   </p>
                 </div>
 
-                {/* PHONE */}
                 <p className="order-item-phone">
                   {order.address.phone}
                 </p>
 
-                {/* META INFO */}
                 <p>Items: {order.items.length}</p>
                 <p className="order-amount">₹{order.amount}</p>
 
-                {/* STATUS DROPDOWN */}
                 <select
                   value={order.status}
                   onChange={(e) =>

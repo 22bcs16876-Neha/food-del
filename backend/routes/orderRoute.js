@@ -12,16 +12,31 @@ import {
 
 const orderRouter = express.Router();
 
-// ================= USER ROUTES =================
+/* ================= USER ROUTES ================= */
+
+// Place order (user must be logged in)
 orderRouter.post("/place", authMiddleware, placeOrder);
+
+// Verify payment (Stripe redirect)
 orderRouter.post("/verify", verifyOrder);
+
+// Get logged-in user's orders
 orderRouter.post("/userorders", authMiddleware, userOrders);
 
-// ✅ TRACK ORDER (Customer)
-orderRouter.get("/:id", authMiddleware, getOrderById);
 
-// ================= ADMIN ROUTES =================
+/* ================= ADMIN ROUTES (NO LOGIN) ================= */
+
+// List all orders (admin panel)
 orderRouter.get("/list", listOrders);
+
+// Update order status
 orderRouter.post("/status", updateStatus);
 
+
+/* ================= TRACK ORDER (Customer) ================= */
+
+// ⚠️ Dynamic route hamesha LAST me
+orderRouter.get("/:id", authMiddleware, getOrderById);
+
 export default orderRouter;
+

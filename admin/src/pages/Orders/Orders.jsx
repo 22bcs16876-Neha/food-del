@@ -55,15 +55,21 @@ const Orders = ({ url }) => {
   };
 
   /* ================= INITIAL LOAD ================= */
-  useEffect(() => {
-    if (!url) {
-      toast.error("API URL not configured ❌");
-      return;
-    }
+useEffect(() => {
+  if (!url) {
+    toast.error("API URL not configured ❌");
+    return;
+  }
 
-   
+  fetchAllOrders(); // initial load
+
+  const interval = setInterval(() => {
     fetchAllOrders();
-  }, [url]); // token dependency removed intentionally
+  }, 5000); // every 5 seconds
+
+  return () => clearInterval(interval);
+}, [url]);
+
 
   return (
     <div className="order add">

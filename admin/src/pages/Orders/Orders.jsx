@@ -5,144 +5,77 @@ import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
 
 const Orders = () => {
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  const token = localStorage.getItem("token");
   const [orders, setOrders] = useState([]);
 
-  // ✅ LIVE backend URL (from env)
-  const url = import.meta.env.VITE_BACKEND_URL;
-
-  // 🔐 token
-  const token = localStorage.getItem("token");
-
-  // ✅ Axios instance (memoized)
   const api = useMemo(() => {
-    if (!url) return null;
-
+    if (!BACKEND_URL) return null;
     return axios.create({
-      baseURL: url,
-      headers: token
-        ? { Authorization: `Bearer ${token}` }
-        : {},
+      baseURL: BACKEND_URL,
+      headers: { Authorization: `Bearer ${token}` },
     });
-  }, [url, token]);
+  }, [BACKEND_URL, token]);
 
-  /* ================= FETCH ALL ORDERS ================= */
-  const fetchAllOrders = async () => {
+  const fetchOrders = async () => {
     if (!api) return;
-
     try {
       const res = await api.get("/api/order/list");
-
-      if (res.data?.success) {
-        setOrders(res.data.data || []);
-      } else {
-        toast.error("Failed to fetch orders ❌");
-      }
-    } catch (error) {
-      console.error("FETCH ORDERS ERROR:", error);
-      toast.error("Server error while fetching orders ❌");
+      if (res.data.success) setOrders(res.data.data);
+    } catch {
+      toast.error("Order fetch failed ❌");
     }
   };
 
-  /* ================= UPDATE ORDER STATUS ================= */
-  const statusHandler = async (orderId, status) => {
-    if (!api) return;
-
+  const updateStatus = async (id, status) => {
     try {
-      const res = await api.post("/api/order/status", {
-        orderId,
-        status,
-      });
-
-      if (res.data?.success) {
-        toast.success("Order status updated ✅");
-        fetchAllOrders();
-      } else {
-        toast.error("Failed to update status ❌");
-      }
-    } catch (error) {
-      console.error("STATUS UPDATE ERROR:", error);
-      toast.error("Server error while updating status ❌");
+      await api.post("/api/order/status", { orderId: id, status });
+      toast.success("Status updated ✅");
+      fetchOrders();
+    } catch {
+      toast.error("Status update failed ❌");
     }
   };
 
-  /* ================= INITIAL LOAD + AUTO REFRESH ================= */
   useEffect(() => {
-    if (!url) {
-      toast.error("Backend URL not configured ❌");
-      console.error("VITE_BACKEND_URL is missing");
+    if (!BACKEND_URL) {
+      toast.error("Backend URL missing ❌");
       return;
     }
-
-    fetchAllOrders();
-
-    const interval = setInterval(fetchAllOrders, 5000); // every 5 sec
-    return () => clearInterval(interval);
-  }, [url, api]);
+    fetchOrders();
+  }, [BACKEND_URL, api]);
 
   return (
     <div className="order add">
-      <h3>Order Page</h3>
+      <h3>Orders</h3>
 
-      <div className="order-list">
-        {orders.length === 0 ? (
-          <p className="empty-text">No orders found</p>
-        ) : (
-          orders.map((order) => (
-            <div key={order._id} className="order-item">
-              <img
-                src={assets.parcel_icon}
-                alt="Order parcel"
-                className="order-icon"
-              />
+      {orders.map((order) => (
+        <div key={order._id} className="order-item">
+          <img src={assets.parcel_icon} alt="" />
 
-              <div className="order-item-details">
-                <p className="order-item-food">
-                  {order.items.map((item, index) => (
-                    <span key={index}>
-                      {item.name} × {item.quantity}
-                      {index !== order.items.length - 1 && ", "}
-                    </span>
-                  ))}
-                </p>
+          <div>
+            <p>
+              {order.items.map(
+                (i) => `${i.name} x ${i.quantity}, `
+              )}
+            </p>
 
-                <p className="order-item-name">
-                  {order.address.firstname} {order.address.lastname}
-                </p>
+            <p>{order.address.firstname}</p>
+            <p>₹{order.amount}</p>
 
-                <div className="order-item-address">
-                  <p>{order.address.street},</p>
-                  <p>
-                    {order.address.city}, {order.address.country}{" "}
-                    {order.address.zip}
-                  </p>
-                </div>
-
-                <p className="order-item-phone">
-                  {order.address.phone}
-                </p>
-
-                <p>Items: {order.items.length}</p>
-                <p className="order-amount">₹{order.amount}</p>
-
-                <select
-                  value={order.status}
-                  onChange={(e) =>
-                    statusHandler(order._id, e.target.value)
-                  }
-                >
-                  <option value="Food Processing">
-                    Food Processing
-                  </option>
-                  <option value="Out For Delivery">
-                    Out For Delivery
-                  </option>
-                  <option value="Delivered">Delivered</option>
-                </select>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            <select
+              value={order.status}
+              onChange={(e) =>
+                updateStatus(order._id, e.target.value)
+              }
+            >
+              <option>Food Processing</option>
+              <option>Out For Delivery</option>
+              <option>Delivered</option>
+            </select>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

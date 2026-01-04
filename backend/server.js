@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
@@ -18,10 +19,16 @@ const PORT = process.env.PORT || 4000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ===== ensure uploads folder exists (🔥 REQUIRED) =====
+const uploadPath = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath);
+}
+
 // ===== middlewares =====
 app.use(express.json());
 
-// ===== CORS =====
+// ===== CORS (FIXED) =====
 app.use((req, res, next) => {
   const allowedOrigins = [
     "https://tomato-meal.netlify.app",
@@ -31,15 +38,14 @@ app.use((req, res, next) => {
   ];
 
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
   }
 
- res.setHeader(
-  "Access-Control-Allow-Headers",
-  "Content-Type, Authorization, token"
-);
-
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, token"
+  );
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,DELETE,OPTIONS"
@@ -51,10 +57,13 @@ app.use((req, res, next) => {
 });
 
 // ===== STATIC IMAGES =====
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadPath));
 
-// ===== DB =====
-connectDB();
+// ===== DB (FAIL SAFE) =====
+connectDB().catch((err) => {
+  console.error("❌ MongoDB connection failed:", err.message);
+  process.exit(1);
+});
 
 // ===== ROUTES =====
 app.use("/api/food", foodRouter);

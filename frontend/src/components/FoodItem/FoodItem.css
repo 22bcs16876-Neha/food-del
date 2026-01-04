@@ -18,6 +18,27 @@
 .food-item-img-container{
     position: relative;
 }
+.food-item-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+margin-bottom: 6px; }
+/* description thoda subtle */
+.food-item-desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 8px;  
+}
+
+
+/* price standout */
+.food-item-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff4c24; /* tomato / zomato style */
+  /* margin-top: 4px; */
+}
 .food-item-img-container .add{
     width: 35px;
     position: absolute;

@@ -1,27 +1,33 @@
-import React from "react";
-import "./FoodDisplay.css"
+import React, { useContext } from "react";
+import "./FoodDisplay.css"; // ✅ correct
+import { StoreContext } from "../../context/storeContext";
+import FoodItem from "../FoodItem/FoodItem";
 
-
-const FoodItem = ({ id, name, description, price, image }) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const FoodDisplay = ({ category }) => {
+  const { food_list } = useContext(StoreContext);
 
   return (
-    <div className="food-item">
-      <div className="food-item-img-container">
-        <img
-          src={`${backendUrl}/uploads/${image}`}
-          alt={name}
-          className="food-item-image"
-        />
-      </div>
+    <div className="food-display">
+      <h2>Top dishes near you</h2>
 
-      <div className="food-item-info">
-        <p className="food-item-name">{name}</p>
-        <p className="food-item-desc">{description}</p>
-        <p className="food-item-price">₹{price}</p>
+      <div className="food-display-list">
+        {food_list
+          .filter(
+            (item) => category === "All" || item.category === category
+          )
+          .map((item) => (
+            <FoodItem
+              key={item._id}
+              id={item._id}
+              name={item.name}
+              description={item.description}
+              price={item.price}
+              image={item.image}
+            />
+          ))}
       </div>
     </div>
   );
 };
 
-export default FoodItem;
+export default FoodDisplay;

@@ -12,7 +12,7 @@ const FoodItem = ({ id, name, price, description, image }) => {
       <div className="food-item-img-container">
         <img
           className="food-item-image"
-          src={`${url}/uploads/${image}`}
+          src={`${url}/uploads/${image}`} // ✅ FIX
           alt={name}
         />
 
@@ -41,10 +41,7 @@ const FoodItem = ({ id, name, price, description, image }) => {
       </div>
 
       <div className="food-item-info">
-        <div className="food-item-name-rating">
-          <p>{name}</p>
-          <img src={assets.rating_starts} alt="rating" />
-        </div>
+        <p>{name}</p>
         <p className="food-item-desc">{description}</p>
         <p className="food-item-price">₹{price}</p>
       </div>

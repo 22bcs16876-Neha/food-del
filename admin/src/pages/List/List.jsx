@@ -3,8 +3,22 @@ import "./List.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const List = ({ url }) => {
+const List = () => {
+  // ✅ LIVE backend URL (Vercel / Netlify env se)
+  const url = import.meta.env.VITE_BACKEND_URL;
+ console.log("API URL =>", import.meta.env.VITE_BACKEND_URL);
+
   const [list, setList] = useState([]);
+
+  /* ================= SAFETY CHECK ================= */
+  useEffect(() => {
+    if (!url) {
+      toast.error("Backend URL missing ❌");
+      console.error("VITE_BACKEND_URL is undefined");
+      return;
+    }
+    fetchList();
+  }, [url]);
 
   /* ================= FETCH FOOD LIST ================= */
   const fetchList = async () => {
@@ -17,7 +31,7 @@ const List = ({ url }) => {
         toast.error("Unable to fetch food list ❌");
       }
     } catch (error) {
-      console.error(error);
+      console.error("FETCH ERROR:", error);
       toast.error("Server error while fetching food ❌");
     }
   };
@@ -31,20 +45,15 @@ const List = ({ url }) => {
 
       if (res.data.success) {
         toast.success(res.data.message || "Food removed ✅");
-        fetchList(); // refresh list
+        fetchList();
       } else {
         toast.error("Failed to remove food ❌");
       }
     } catch (error) {
-      console.error(error);
+      console.error("REMOVE ERROR:", error);
       toast.error("Server error ❌");
     }
   };
-
-  /* ================= INITIAL LOAD ================= */
-  useEffect(() => {
-    fetchList();
-  }, []);
 
   return (
     <div className="list add flex-col">
@@ -59,23 +68,29 @@ const List = ({ url }) => {
           <b>Action</b>
         </div>
 
-        {list.map((item) => (
-          <div className="list-table-format" key={item._id}>
-            <img
-              src={`${url}/images/${item.image}`}
-              alt={item.name}
-            />
-            <p>{item.name}</p>
-            <p>{item.category}</p>
-            <p>₹{item.price}</p>
-            <p
-              className="cursor"
-              onClick={() => removeFood(item._id)}
-            >
-              ❌
-            </p>
-          </div>
-        ))}
+        {list.length === 0 ? (
+          <p style={{ textAlign: "center", marginTop: "20px" }}>
+            No food items found 🍽️
+          </p>
+        ) : (
+          list.map((item) => (
+            <div className="list-table-format" key={item._id}>
+              <img
+                src={`${url}/images/${item.image}`}
+                alt={item.name}
+              />
+              <p>{item.name}</p>
+              <p>{item.category}</p>
+              <p>₹{item.price}</p>
+              <p
+                className="cursor"
+                onClick={() => removeFood(item._id)}
+              >
+                ❌
+              </p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

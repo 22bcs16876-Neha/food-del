@@ -1,5 +1,6 @@
 import React from "react";
-import "./FoodItem.css";
+import "./FoodDisplay.css"
+
 
 const FoodItem = ({ id, name, description, price, image }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;

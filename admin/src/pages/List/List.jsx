@@ -56,18 +56,20 @@ const List = () => {
           <b>Action</b>
         </div>
 
-        {list.map((item) => (
-          <div key={item._id} className="list-table-format">
-            <img
-              src={`${BACKEND_URL}/images/${item.image}`}
-              alt=""
-            />
-            <p>{item.name}</p>
-            <p>{item.category}</p>
-            <p>₹{item.price}</p>
-            <p onClick={() => removeFood(item._id)}>❌</p>
-          </div>
-        ))}
+{list.map((item) => (
+  <div key={item._id} className="list-table-format">
+    <img
+      src={`${BACKEND_URL}/uploads/${item.image}`}
+      alt={item.name}
+      width="50"
+    />
+    <p>{item.name}</p>
+    <p>{item.category}</p>
+    <p>₹{item.price}</p>
+    <p onClick={() => removeFood(item._id)}>❌</p>
+  </div>
+))}
+
       </div>
     </div>
   );

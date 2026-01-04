@@ -6,12 +6,24 @@ export const StoreContext = createContext(null);
 const StoreContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [token, setToken] = useState("");
-  const [foodList, setFoodList] = useState([]);
+  const [food_list, setFoodList] = useState([]);
 
-  // ✅ Backend base URL from env
-  const url = import.meta.env.VITE_API_URL;
+  // ✅ SINGLE SOURCE OF TRUTH
+  const url = import.meta.env.VITE_BACKEND_URL;
 
-  /* ===================== ADD TO CART ===================== */
+  /* ================= FETCH FOOD LIST ================= */
+  const fetchFoodList = async () => {
+    try {
+      const res = await axios.get(`${url}/api/food/list`);
+      if (res.data.success) {
+        setFoodList(res.data.data);
+      }
+    } catch (error) {
+      console.error("Food list fetch error:", error);
+    }
+  };
+
+  /* ================= CART ================= */
   const addToCart = async (itemId) => {
     setCartItems((prev) => ({
       ...prev,
@@ -27,98 +39,67 @@ const StoreContextProvider = ({ children }) => {
         { headers: { token } }
       );
     } catch (error) {
-      console.error("Add to cart failed:", error);
+      console.log("Add to cart error");
     }
   };
 
-  /* ===================== REMOVE FROM CART ===================== */
   const removeFromCart = (itemId) => {
     setCartItems((prev) => {
       const updated = { ...prev };
-
       if (!updated[itemId]) return updated;
-
-      if (updated[itemId] === 1) {
-        delete updated[itemId];
-      } else {
-        updated[itemId]--;
-      }
-
+      if (updated[itemId] === 1) delete updated[itemId];
+      else updated[itemId]--;
       return updated;
     });
   };
 
-  /* ===================== TOTAL CART AMOUNT ===================== */
   const getTotalCartAmount = () => {
     let total = 0;
-
-    for (const itemId in cartItems) {
-      const product = foodList.find((item) => item._id === itemId);
-      if (product) {
-        total += product.price * cartItems[itemId];
-      }
+    for (const id in cartItems) {
+      const product = food_list.find((item) => item._id === id);
+      if (product) total += product.price * cartItems[id];
     }
-
     return total;
   };
 
-  /* ===================== FETCH FOOD LIST ===================== */
-  const fetchFoodList = async () => {
+  const loadCartData = async (savedToken) => {
+    if (!savedToken) return;
     try {
-      const response = await axios.get(`${url}/api/food/list`);
-      setFoodList(response.data?.data || []);
-    } catch (error) {
-      console.error("Fetching food list failed:", error);
+      const res = await axios.post(
+        `${url}/api/cart/get`,
+        {},
+        { headers: { token: savedToken } }
+      );
+      setCartItems(res.data?.cartData || {});
+    } catch {
+      console.log("User not logged in, cart skipped");
     }
   };
 
-  /* ===================== LOAD CART DATA ===================== */
-const loadCartData = async (userToken) => {
-  if (!userToken) return; // ✅ IMPORTANT
-
-  try {
-    const res = await axios.post(
-      `${url}/api/cart/get`,
-      {},
-      { headers: { token: userToken } }
-    );
-    setCartItems(res.data?.cartData || {});
-  } catch {
-    console.log("User not logged in, cart skipped");
-  }
-};
-
-
-  /* ===================== INITIAL LOAD ===================== */
-useEffect(() => {
-  const init = async () => {
-    await fetchFoodList();
+  /* ================= INIT ================= */
+  useEffect(() => {
+    fetchFoodList();
 
     const savedToken = localStorage.getItem("token");
-    if (!savedToken) return; 
-
-    setToken(savedToken);
-    await loadCartData(savedToken);
-  };
-
-  init();
-}, []);
-
-  /* ===================== CONTEXT VALUE ===================== */
-  const contextValue = {
-    food_list: foodList,
-    cartItems,
-    setCartItems,
-    addToCart,
-    removeFromCart,
-    getTotalCartAmount,
-    url,
-    token,
-    setToken,
-  };
+    if (savedToken) {
+      setToken(savedToken);
+      loadCartData(savedToken);
+    }
+  }, []);
 
   return (
-    <StoreContext.Provider value={contextValue}>
+    <StoreContext.Provider
+      value={{
+        food_list,
+        cartItems,
+        addToCart,
+        removeFromCart,
+        getTotalCartAmount,
+        url,
+        token,
+        setToken,
+      }}
+    >
       {children}
     </StoreContext.Provider>
   );

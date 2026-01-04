@@ -3,43 +3,48 @@ import { useState, useContext, useEffect, useCallback } from "react";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../../context/storeContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const MyOrders = () => {
   const { url, token } = useContext(StoreContext);
+  const navigate = useNavigate();
+
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true); // For loading state
-  const [error, setError] = useState(""); // For error messages
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // 🔹 Fetch user orders
+  /* ================= FETCH USER ORDERS ================= */
   const fetchOrders = useCallback(async () => {
-  setLoading(true);
-  setError("");
-  try {
-const response = await axios.post(
-  `${url}/api/order/userorders`,
-  {},
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+    try {
+      const res = await axios.get(
+        `${url}/api/order/userorders`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    setOrders(response.data.data || []);
-  } catch (error) {
-    console.error(error);
-    setError("Failed to load orders. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-}, [url, token]);
-
-  // 🔹 Call API when token is available
-  useEffect(() => {
-    if (token) {
-      fetchOrders();
+      if (res.data?.success) {
+        setOrders(res.data.data || []);
+      } else {
+        setError("Failed to load orders");
+      }
+    } catch (err) {
+      setError("Failed to load orders");
+    } finally {
+      setLoading(false);
     }
-  }, [token, fetchOrders]);
+  }, [url, token]);
+
+  /* ================= INITIAL LOAD ================= */
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    fetchOrders();
+  }, [token, fetchOrders, navigate]);
 
   return (
     <div className="my-orders">
@@ -56,6 +61,7 @@ const response = await axios.post(
           orders.map((order) => (
             <div key={order._id} className="my-orders-order">
               <img src={assets.parcel_icon} alt="parcel" />
+
               <p className="items">
                 {order.items.map((item, i) =>
                   i === order.items.length - 1
@@ -63,14 +69,20 @@ const response = await axios.post(
                     : `${item.name} x ${item.quantity}, `
                 )}
               </p>
-              <p className="price">₹{order.amount}.00</p>
-              <p className="count">Items: {order.items.length}</p>
-              <p className={`status ${order.status?.toLowerCase() || "delivered"}`}>
-                ● {order.status || "Delivered"}
+
+              <p className="price">₹{order.amount}</p>
+              <p>Items: {order.items.length}</p>
+
+              <p className={`status ${order.status.toLowerCase()}`}>
+                ● {order.status}
               </p>
-<button onClick={() => navigate(`/track/${order._id}`)}>
-  Track Order
-</button>
+
+              <button
+                className="track-btn"
+                onClick={() => navigate(`/track/${order._id}`)}
+              >
+                Track Order
+              </button>
             </div>
           ))
         )}

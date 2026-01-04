@@ -3,40 +3,20 @@ import authMiddleware from "../middleware/auth.js";
 
 import {
   placeOrder,
-  userOrders,
   verifyOrder,
+  userOrders,
+  getOrderById,
   listOrders,
   updateStatus,
-  getOrderById,
 } from "../controllers/orderController.js";
 
-const orderRouter = express.Router();
+const router = express.Router();
 
-/* ================= USER ROUTES ================= */
+router.post("/place", authMiddleware, placeOrder);
+router.post("/verify", verifyOrder);
+router.get("/userorders", authMiddleware, userOrders);
+router.get("/:id", authMiddleware, getOrderById);
+router.get("/", listOrders);
+router.post("/status", updateStatus);
 
-// Place order (user must be logged in)
-orderRouter.post("/place", authMiddleware, placeOrder);
-
-// Verify payment (Stripe redirect)
-orderRouter.post("/verify", verifyOrder);
-
-// Get logged-in user's orders
-orderRouter.post("/userorders", authMiddleware, userOrders);
-
-
-/* ================= ADMIN ROUTES (NO LOGIN) ================= */
-
-// List all orders (admin panel)
-orderRouter.get("/list", listOrders);
-
-// Update order status
-orderRouter.post("/status", updateStatus);
-
-
-/* ================= TRACK ORDER (Customer) ================= */
-
-// ⚠️ Dynamic route hamesha LAST me
-orderRouter.get("/:id", authMiddleware, getOrderById);
-
-export default orderRouter;
-
+export default router;

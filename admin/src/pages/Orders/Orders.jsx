@@ -4,12 +4,19 @@ import "./Orders.css";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
 
-const Orders = ({ url }) => {
+const Orders = () => {
   const [orders, setOrders] = useState([]);
+
+  // ✅ LIVE backend URL (from env)
+  const url = import.meta.env.VITE_BACKEND_URL;
+
+  // 🔐 token
   const token = localStorage.getItem("token");
 
-  // Axios instance
+  // ✅ Axios instance (memoized)
   const api = useMemo(() => {
+    if (!url) return null;
+
     return axios.create({
       baseURL: url,
       headers: token
@@ -20,22 +27,26 @@ const Orders = ({ url }) => {
 
   /* ================= FETCH ALL ORDERS ================= */
   const fetchAllOrders = async () => {
+    if (!api) return;
+
     try {
       const res = await api.get("/api/order/list");
 
       if (res.data?.success) {
         setOrders(res.data.data || []);
       } else {
-        toast.error("Server error ❌");
+        toast.error("Failed to fetch orders ❌");
       }
     } catch (error) {
       console.error("FETCH ORDERS ERROR:", error);
-      toast.error("Server error ❌");
+      toast.error("Server error while fetching orders ❌");
     }
   };
 
   /* ================= UPDATE ORDER STATUS ================= */
   const statusHandler = async (orderId, status) => {
+    if (!api) return;
+
     try {
       const res = await api.post("/api/order/status", {
         orderId,
@@ -46,30 +57,27 @@ const Orders = ({ url }) => {
         toast.success("Order status updated ✅");
         fetchAllOrders();
       } else {
-        toast.error("Server error ❌");
+        toast.error("Failed to update status ❌");
       }
     } catch (error) {
       console.error("STATUS UPDATE ERROR:", error);
-      toast.error("Server error ❌");
+      toast.error("Server error while updating status ❌");
     }
   };
 
-  /* ================= INITIAL LOAD ================= */
-useEffect(() => {
-  if (!url) {
-    toast.error("API URL not configured ❌");
-    return;
-  }
+  /* ================= INITIAL LOAD + AUTO REFRESH ================= */
+  useEffect(() => {
+    if (!url) {
+      toast.error("Backend URL not configured ❌");
+      console.error("VITE_BACKEND_URL is missing");
+      return;
+    }
 
-  fetchAllOrders(); // initial load
-
-  const interval = setInterval(() => {
     fetchAllOrders();
-  }, 5000); // every 5 seconds
 
-  return () => clearInterval(interval);
-}, [url]);
-
+    const interval = setInterval(fetchAllOrders, 5000); // every 5 sec
+    return () => clearInterval(interval);
+  }, [url, api]);
 
   return (
     <div className="order add">
@@ -122,8 +130,12 @@ useEffect(() => {
                     statusHandler(order._id, e.target.value)
                   }
                 >
-                  <option value="Food Processing">Food Processing</option>
-                  <option value="Out For Delivery">Out For Delivery</option>
+                  <option value="Food Processing">
+                    Food Processing
+                  </option>
+                  <option value="Out For Delivery">
+                    Out For Delivery
+                  </option>
                   <option value="Delivered">Delivered</option>
                 </select>
               </div>

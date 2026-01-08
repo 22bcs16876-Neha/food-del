@@ -1,6 +1,5 @@
 import express from "express";
 import authMiddleware from "../middleware/auth.js";
-import adminAuth from "../middleware/adminAuth.js";
 import {
   placeOrder,
   verifyOrder,
@@ -17,9 +16,9 @@ router.post("/place", authMiddleware, placeOrder);
 router.post("/verify", verifyOrder);
 router.get("/userorders", authMiddleware, userOrders);
 
-// ADMIN 🔥 FINAL FIX
-router.get("/list", adminAuth, listOrders);
-router.post("/status", adminAuth, updateStatus);
+// ADMIN (but using SAME auth)
+router.get("/list", authMiddleware, listOrders);
+router.post("/status", authMiddleware, updateStatus);
 
 // MUST BE LAST
 router.get("/:id", authMiddleware, getOrderById);

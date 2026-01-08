@@ -116,10 +116,6 @@ export const getOrderById = async (req, res) => {
 /* ================= ADMIN ================= */
 export const listOrders = async (req, res) => {
   try {
-    // 🔥 adminAuth sets req.admin
-    if (!req.admin) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
-    }
 
     const orders = await orderModel.find({});
     res.json({ success: true, data: orders });

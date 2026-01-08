@@ -113,13 +113,31 @@ export const getOrderById = async (req, res) => {
 };
 
 /* ================= ADMIN ================= */
+/* ================= ADMIN ================= */
 export const listOrders = async (req, res) => {
-  const orders = await orderModel.find({});
-  res.json({ success: true, data: orders });
+  try {
+    // 🔥 adminAuth sets req.admin
+    if (!req.admin) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const orders = await orderModel.find({});
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
 };
 
 export const updateStatus = async (req, res) => {
-  const { orderId, status } = req.body;
-  await orderModel.findByIdAndUpdate(orderId, { status });
-  res.json({ success: true });
+  try {
+    if (!req.admin) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const { orderId, status } = req.body;
+    await orderModel.findByIdAndUpdate(orderId, { status });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
 };

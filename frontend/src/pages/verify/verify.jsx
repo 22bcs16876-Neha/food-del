@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { StoreContext } from "../../context/storeContext";
 import axios from "axios";
@@ -13,17 +13,26 @@ const Verify = () => {
   const orderId = searchParams.get("orderId");
 
   const [status, setStatus] = useState("verifying");
+  const hasVerified = useRef(false); // 🔒 prevents double call
 
   useEffect(() => {
+    if (!orderId || !token || hasVerified.current) return;
+
+    hasVerified.current = true;
+
     const verifyPayment = async () => {
       try {
         const res = await axios.post(
           `${url}/api/order/verify`,
           { success, orderId },
-          { headers: { token } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        console.log("VERIFY API RESPONSE:", res.data);
+        console.log("VERIFY RESPONSE:", res.data);
 
         if (res.data.success === true) {
           setStatus("success");
@@ -32,15 +41,13 @@ const Verify = () => {
           setStatus("failed");
         }
       } catch (error) {
-        console.log("VERIFY ERROR:", error);
+        console.log("VERIFY ERROR:", error.response?.data || error.message);
         setStatus("failed");
       }
     };
 
-    if (orderId) {
-      verifyPayment();
-    }
-  }, [success, orderId, navigate, url, token]);
+    verifyPayment();
+  }, [orderId, token, success, url, navigate]);
 
   return (
     <div className="verify-page">
@@ -57,7 +64,7 @@ const Verify = () => {
           <>
             <div className="icon success">✔</div>
             <h2>Order Placed Successfully!</h2>
-            <p>You’ll be redirected to your orders shortly.</p>
+            <p>You’ll be redirected shortly.</p>
           </>
         )}
 
@@ -65,7 +72,6 @@ const Verify = () => {
           <>
             <div className="icon failed">✖</div>
             <h2>Payment Failed</h2>
-            <p>Please try again.</p>
             <button onClick={() => navigate("/")}>Go Home</button>
           </>
         )}

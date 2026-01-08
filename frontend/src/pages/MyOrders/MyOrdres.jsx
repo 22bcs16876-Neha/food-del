@@ -13,7 +13,6 @@ const MyOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* ================= FETCH USER ORDERS ================= */
   const fetchOrders = useCallback(async () => {
     try {
       const res = await axios.get(
@@ -28,16 +27,16 @@ const MyOrders = () => {
       if (res.data?.success) {
         setOrders(res.data.data || []);
       } else {
-        setError("Failed to load orders");
+        setError(res.data.message || "Failed to load orders");
       }
     } catch (err) {
-      setError("Failed to load orders");
+      console.error("MY ORDERS ERROR:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Failed to load orders");
     } finally {
       setLoading(false);
     }
   }, [url, token]);
 
-  /* ================= INITIAL LOAD ================= */
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -70,7 +69,9 @@ const MyOrders = () => {
                 )}
               </p>
 
-              <p className="price">₹{order.amount}</p>
+              {/* ✅ FIXED AMOUNT */}
+              <p className="price">₹{order.amount / 100}</p>
+
               <p>Items: {order.items.length}</p>
 
               <p className={`status ${order.status.toLowerCase()}`}>

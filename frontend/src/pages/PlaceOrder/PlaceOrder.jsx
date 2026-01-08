@@ -23,7 +23,7 @@ const PlaceOrder = () => {
     phone: "",
   });
 
-  // 🔹 redirect if not logged in or cart empty
+  // redirect if not logged in or cart empty
   useEffect(() => {
     if (!token || getTotalCartAmount() === 0) {
       navigate("/cart");
@@ -40,7 +40,6 @@ const PlaceOrder = () => {
   const placeOrder = async (e) => {
     e.preventDefault();
 
-    // prepare items
     const orderItems = food_list
       .filter((item) => cartItems[item._id] > 0)
       .map((item) => ({
@@ -48,10 +47,11 @@ const PlaceOrder = () => {
         quantity: cartItems[item._id],
       }));
 
+    // ✅ Stripe amount MUST be in paise
     const orderData = {
       address: data,
       items: orderItems,
-      amount: getTotalCartAmount() + deliveryFee,
+      amount: (getTotalCartAmount() + deliveryFee) * 100,
     };
 
     try {
@@ -60,7 +60,7 @@ const PlaceOrder = () => {
         orderData,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ FIXED
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -68,11 +68,11 @@ const PlaceOrder = () => {
       if (response.data.success) {
         window.location.replace(response.data.session_url);
       } else {
-        alert("Order failed");
+        alert(response.data.message || "Order failed");
       }
     } catch (error) {
-      console.log("ORDER ERROR:", error);
-      alert("Something went wrong");
+      console.log("ORDER ERROR:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -83,81 +83,24 @@ const PlaceOrder = () => {
         <p className="title">Delivery Information</p>
 
         <div className="multi-fields">
-          <input
-            name="firstName"
-            value={data.firstName}
-            onChange={onChangeHandler}
-            placeholder="First Name"
-            required
-          />
-          <input
-            name="lastName"
-            value={data.lastName}
-            onChange={onChangeHandler}
-            placeholder="Last Name"
-            required
-          />
+          <input name="firstName" value={data.firstName} onChange={onChangeHandler} placeholder="First Name" required />
+          <input name="lastName" value={data.lastName} onChange={onChangeHandler} placeholder="Last Name" required />
         </div>
 
-        <input
-          name="email"
-          type="email"
-          value={data.email}
-          onChange={onChangeHandler}
-          placeholder="Email"
-          required
-        />
-
-        <input
-          name="street"
-          value={data.street}
-          onChange={onChangeHandler}
-          placeholder="Street"
-          required
-        />
+        <input name="email" type="email" value={data.email} onChange={onChangeHandler} placeholder="Email" required />
+        <input name="street" value={data.street} onChange={onChangeHandler} placeholder="Street" required />
 
         <div className="multiple-fields">
-          <input
-            name="city"
-            value={data.city}
-            onChange={onChangeHandler}
-            placeholder="City"
-            required
-          />
-          <input
-            name="state"
-            value={data.state}
-            onChange={onChangeHandler}
-            placeholder="State"
-            required
-          />
+          <input name="city" value={data.city} onChange={onChangeHandler} placeholder="City" required />
+          <input name="state" value={data.state} onChange={onChangeHandler} placeholder="State" required />
         </div>
 
         <div className="multiple-fields">
-          <input
-            name="zipcode"
-            value={data.zipcode}
-            onChange={onChangeHandler}
-            placeholder="Zip Code"
-            required
-          />
-          <input
-            name="country"
-            value={data.country}
-            onChange={onChangeHandler}
-            placeholder="Country"
-            required
-          />
+          <input name="zipcode" value={data.zipcode} onChange={onChangeHandler} placeholder="Zip Code" required />
+          <input name="country" value={data.country} onChange={onChangeHandler} placeholder="Country" required />
         </div>
 
-        <input
-          name="phone"
-          type="tel"
-          value={data.phone}
-          onChange={onChangeHandler}
-          placeholder="Phone"
-          required
-        />
+        <input name="phone" type="tel" value={data.phone} onChange={onChangeHandler} placeholder="Phone" required />
       </div>
 
       {/* RIGHT */}
@@ -177,12 +120,7 @@ const PlaceOrder = () => {
 
           <div className="cart-total-details">
             <b>Total</b>
-            <b>
-              ₹
-              {getTotalCartAmount() === 0
-                ? 0
-                : getTotalCartAmount() + deliveryFee}
-            </b>
+            <b>₹{getTotalCartAmount() + deliveryFee}</b>
           </div>
 
           <button type="submit" disabled={getTotalCartAmount() === 0}>

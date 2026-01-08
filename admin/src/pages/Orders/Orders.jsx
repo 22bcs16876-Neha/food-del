@@ -6,30 +6,40 @@ import { assets } from "../../assets/assets";
 
 const Orders = () => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken"); // 🔥 FIX
   const [orders, setOrders] = useState([]);
 
   const api = useMemo(() => {
-    if (!BACKEND_URL) return null;
+    if (!BACKEND_URL || !token) return null;
     return axios.create({
       baseURL: BACKEND_URL,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
   }, [BACKEND_URL, token]);
 
   const fetchOrders = async () => {
-    if (!api) return;
+    if (!api) {
+      toast.error("Admin not authenticated ❌");
+      return;
+    }
     try {
       const res = await api.get("/api/order/list");
       if (res.data.success) setOrders(res.data.data);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Order fetch failed ❌");
     }
   };
 
   const updateStatus = async (id, status) => {
+    if (!api) return;
     try {
-      await api.post("/api/order/status", { orderId: id, status });
+      await api.post("/api/order/status", {
+        orderId: id,
+        status,
+      });
       toast.success("Status updated ✅");
       fetchOrders();
     } catch {

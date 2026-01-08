@@ -13,10 +13,10 @@ const router = express.Router();
 
 // USER
 router.post("/place", authMiddleware, placeOrder);
-router.post("/verify", verifyOrder);
+router.post("/verify", authMiddleware, verifyOrder);
 router.get("/userorders", authMiddleware, userOrders);
 
-// ADMIN (but using SAME auth)
+// ADMIN
 router.get("/list", authMiddleware, listOrders);
 router.post("/status", authMiddleware, updateStatus);
 

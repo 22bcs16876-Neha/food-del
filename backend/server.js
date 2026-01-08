@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import cors from "cors";
 
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
@@ -16,41 +15,42 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ================= FIX __dirname (ESM) =================
+// ===== __dirname fix (ESM) =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ================= ENSURE UPLOADS FOLDER =================
+// ===== ensure uploads folder exists =====
 const uploadPath = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath);
 }
 
-// ================= MIDDLEWARES =================
+// ===== middlewares =====
 app.use(express.json());
 
-// ================= CORS (🔥 FINAL & CORRECT) =================
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",               // frontend local
-      "http://localhost:5174",               // admin local
-      "https://tomato-meal.netlify.app",      // frontend prod
-      "https://tomato-meal-admin.netlify.app" // admin prod (agar alag hai)
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+// ===== 🔥 FINAL CORS (NO MORE ERRORS) =====
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, token"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
 
-// 🔥 PREFLIGHT (MOST IMPORTANT)
-app.options("*", cors());
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
-// ================= STATIC FILES =================
+  next();
+});
+
+// ===== static uploads =====
 app.use("/uploads", express.static(uploadPath));
 
-// ================= DATABASE =================
+// ===== DB connect =====
 connectDB()
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => {
@@ -58,22 +58,23 @@ connectDB()
     process.exit(1);
   });
 
-// ================= ROUTES =================
+// ===== routes =====
 app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// ================= HEALTH CHECK =================
+// ===== health check =====
 app.get("/health", (req, res) => {
   res.json({ success: true, message: "Backend running 🚀" });
 });
 
+// ===== root (optional) =====
 app.get("/", (req, res) => {
-  res.send("Food backend is live 🚀");
+  res.send("Tomato backend is live 🚀");
 });
 
-// ================= START SERVER =================
+// ===== start server =====
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });

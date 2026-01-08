@@ -110,26 +110,34 @@ const StoreContextProvider = ({ children }) => {
   };
 
   /* ================= EFFECTS ================= */
+// Load food list once
+useEffect(() => {
+  fetchFoodList();
+}, []);
 
-  // Load food list once
-  useEffect(() => {
-    fetchFoodList();
-  }, []);
+// Load token from localStorage
+useEffect(() => {
+  const savedToken = localStorage.getItem("token");
+  if (savedToken) {
+    setToken(savedToken);
+  }
+}, []);
 
-  // Load token from localStorage
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      setToken(savedToken);
-    }
-  }, []);
+// 🔥 KEEP TOKEN PERSISTENT
+useEffect(() => {
+  if (token) {
+    localStorage.setItem("token", token);
+  } else {
+    localStorage.removeItem("token");
+  }
+}, [token]);
 
-  // Load cart AFTER token is available
-  useEffect(() => {
-    if (token) {
-      loadCartData(token);
-    }
-  }, [token]);
+// Load cart AFTER token is available
+useEffect(() => {
+  if (token) {
+    loadCartData(token);
+  }
+}, [token]);
 
   /* ================= PROVIDER ================= */
   return (

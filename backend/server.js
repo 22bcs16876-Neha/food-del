@@ -75,6 +75,9 @@ app.use("/api/order", orderRouter);
 app.get("/health", (req, res) => {
   res.json({ success: true, message: "Backend running 🚀" });
 });
+app.get("/", (req, res) => {
+  res.send("Food backend is live 🚀");
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);

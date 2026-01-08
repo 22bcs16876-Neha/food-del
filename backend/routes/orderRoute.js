@@ -11,14 +11,14 @@ import {
 
 const router = express.Router();
 
-// USER ROUTES
+// USER
 router.post("/place", authMiddleware, placeOrder);
 router.post("/verify", verifyOrder);
 router.get("/userorders", authMiddleware, userOrders);
 
-// ADMIN ROUTES
-router.get("/list", listOrders);        // 🔥 ADD THIS
-router.post("/status", updateStatus);   // 🔥 ADMIN
+// ADMIN
+router.get("/list", listOrders);
+router.post("/status", updateStatus);
 
 // MUST BE LAST
 router.get("/:id", authMiddleware, getOrderById);

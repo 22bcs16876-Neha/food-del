@@ -11,15 +11,23 @@ import {
 
 const router = express.Router();
 
-// USER
+/* ================= USER ================= */
+
+// Place order → user must be logged in
 router.post("/place", authMiddleware, placeOrder);
-router.post("/verify", authMiddleware, verifyOrder);
+
+// 🔥 VERIFY PAYMENT (NO authMiddleware)
+router.post("/verify", verifyOrder);
+
+// Get user's orders
 router.get("/userorders", authMiddleware, userOrders);
 
-// ADMIN
+/* ================= ADMIN ================= */
+
 router.get("/list", authMiddleware, listOrders);
 router.post("/status", authMiddleware, updateStatus);
 
+/* ================= SINGLE ORDER ================= */
 // MUST BE LAST
 router.get("/:id", authMiddleware, getOrderById);
 

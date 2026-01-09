@@ -1,22 +1,25 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { StoreContext } from "../../context/storeContext";
 import axios from "axios";
 import "./verify.css";
 
 const Verify = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { url, token } = useContext(StoreContext);
 
-  const success = searchParams.get("success");
+  const url = import.meta.env.VITE_API_URL;
+
   const orderId = searchParams.get("orderId");
+  const session_id = searchParams.get("session_id"); // 🔥 IMPORTANT
 
   const [status, setStatus] = useState("verifying");
-  const hasVerified = useRef(false); // 🔒 prevents double call
+  const hasVerified = useRef(false);
 
   useEffect(() => {
-    if (!orderId || !token || hasVerified.current) return;
+    if (!orderId || !session_id || hasVerified.current) {
+      setStatus("failed");
+      return;
+    }
 
     hasVerified.current = true;
 
@@ -24,17 +27,18 @@ const Verify = () => {
       try {
         const res = await axios.post(
           `${url}/api/order/verify`,
-          { success, orderId },
+          {
+            orderId,
+            session_id,
+          },
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: "", // 🔥 do NOT send token
             },
           }
         );
 
-        console.log("VERIFY RESPONSE:", res.data);
-
-        if (res.data.success === true) {
+        if (res.data.success) {
           setStatus("success");
           setTimeout(() => navigate("/myorders"), 2000);
         } else {
@@ -47,7 +51,7 @@ const Verify = () => {
     };
 
     verifyPayment();
-  }, [orderId, token, success, url, navigate]);
+  }, [orderId, session_id, url, navigate]);
 
   return (
     <div className="verify-page">

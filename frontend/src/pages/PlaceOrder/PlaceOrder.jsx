@@ -3,10 +3,17 @@ import "./PlaceOrder.css";
 import { StoreContext } from "../../context/storeContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const PlaceOrder = () => {
-  const { getTotalCartAmount, token, food_list, cartItems, url } =
-    useContext(StoreContext);
+  const {
+    getTotalCartAmount,
+    token,
+    food_list,
+    cartItems,
+    url,
+    discount, // ✅ discount from context
+  } = useContext(StoreContext);
 
   const navigate = useNavigate();
   const deliveryFee = 49;
@@ -23,12 +30,15 @@ const PlaceOrder = () => {
     phone: "",
   });
 
+  const subtotal = getTotalCartAmount();
+  const total = Math.max(subtotal + deliveryFee - discount, 0);
+
   // redirect if not logged in or cart empty
   useEffect(() => {
-    if (!token || getTotalCartAmount() === 0) {
+    if (!token || subtotal === 0) {
       navigate("/cart");
     }
-  }, [token, getTotalCartAmount, navigate]);
+  }, [token, subtotal, navigate]);
 
   const onChangeHandler = (e) => {
     setData((prev) => ({
@@ -47,11 +57,10 @@ const PlaceOrder = () => {
         quantity: cartItems[item._id],
       }));
 
-    // ✅ Stripe amount MUST be in paise
     const orderData = {
       address: data,
       items: orderItems,
-      amount: (getTotalCartAmount() + deliveryFee) * 100,
+      amount: total * 100, // ✅ FINAL amount in paise
     };
 
     try {
@@ -68,11 +77,13 @@ const PlaceOrder = () => {
       if (response.data.success) {
         window.location.replace(response.data.session_url);
       } else {
-        alert(response.data.message || "Order failed");
+        toast.error(response.data.message || "Order failed ❌");
       }
     } catch (error) {
       console.log("ORDER ERROR:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Something went wrong");
+      toast.error(
+        error.response?.data?.message || "Something went wrong ❌"
+      );
     }
   };
 
@@ -110,20 +121,25 @@ const PlaceOrder = () => {
 
           <div className="cart-total-details">
             <p>Subtotal</p>
-            <p>₹{getTotalCartAmount()}</p>
+            <p>₹{subtotal}</p>
           </div>
 
           <div className="cart-total-details">
             <p>Delivery Fee</p>
-            <p>₹{getTotalCartAmount() === 0 ? 0 : deliveryFee}</p>
+            <p>₹{subtotal === 0 ? 0 : deliveryFee}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <p>Discount</p>
+            <p>-₹{discount}</p>
           </div>
 
           <div className="cart-total-details">
             <b>Total</b>
-            <b>₹{getTotalCartAmount() + deliveryFee}</b>
+            <b>₹{total}</b>
           </div>
 
-          <button type="submit" disabled={getTotalCartAmount() === 0}>
+          <button type="submit" disabled={subtotal === 0}>
             PROCEED TO PAYMENT
           </button>
         </div>

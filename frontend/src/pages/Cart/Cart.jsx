@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import "./Cart.css";
 import { StoreContext } from "../../context/storeContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const {
@@ -11,37 +12,44 @@ const Cart = () => {
     getTotalCartAmount,
     url,
     token,
+    discount,
+    setDiscount,
   } = useContext(StoreContext);
 
   const navigate = useNavigate();
-
-  // ✅ Promo code state
   const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
 
-  // ✅ Apply promo logic
+  /* ================= APPLY PROMO ================= */
   const applyPromoCode = () => {
-    if (promoCode === "SAVE50") {
+    const subtotal = getTotalCartAmount();
+    if (subtotal === 0) {
+      toast.warning("Your cart is empty 🛒");
+      return;
+    }
+
+    const code = promoCode.trim().toUpperCase();
+
+    if (code === "SAVE50") {
       setDiscount(50);
-      alert("₹50 discount applied 🎉");
-    } else if (promoCode === "SAVE100") {
+      toast.success("₹50 discount applied 🎉");
+    } else if (code === "SAVE100") {
       setDiscount(100);
-      alert("₹100 discount applied 🎉");
+      toast.success("₹100 discount applied 🎉");
     } else {
-      alert("Invalid promo code ❌");
       setDiscount(0);
+      toast.error("Invalid promo code ❌");
     }
   };
 
-  // ✅ Checkout handler
+  /* ================= CHECKOUT ================= */
   const handleCheckout = () => {
     if (getTotalCartAmount() === 0) {
-      alert("Cart is empty");
+      toast.warning("Your cart is empty 🛒");
       return;
     }
 
     if (!token) {
-      alert("Please login to continue");
+      toast.info("Please login to continue 🔐");
       navigate("/login");
       return;
     }
@@ -49,9 +57,12 @@ const Cart = () => {
     navigate("/order");
   };
 
+  const subtotal = getTotalCartAmount();
+  const deliveryFee = subtotal === 0 ? 0 : 49;
+  const total = Math.max(subtotal + deliveryFee - Number(discount), 0);
+
   return (
     <div className="cart">
-      {/* ---------------- CART ITEMS ---------------- */}
       <div className="cart-items">
         <div className="cart-items-title">
           <p>Items</p>
@@ -66,23 +77,16 @@ const Cart = () => {
 
         {food_list.map((item) => {
           const quantity = cartItems[item._id];
-
           if (quantity > 0) {
             return (
               <div key={item._id}>
                 <div className="cart-items-title cart-items-item">
-                  <img
-                    src={`${url}/uploads/${item.image}`}
-                    alt={item.name}
-                  />
+                  <img src={`${url}/uploads/${item.image}`} alt={item.name} />
                   <p>{item.name}</p>
                   <p>₹{item.price}</p>
                   <p>{quantity}</p>
                   <p>₹{item.price * quantity}</p>
-                  <p
-                    className="cross"
-                    onClick={() => removeFromCart(item._id)}
-                  >
+                  <p className="cross" onClick={() => removeFromCart(item._id)}>
                     x
                   </p>
                 </div>
@@ -94,53 +98,39 @@ const Cart = () => {
         })}
       </div>
 
-      {/* ---------------- CART SUMMARY ---------------- */}
       <div className="cart-bottom">
         <div className="cart-total">
           <h2>Cart Total</h2>
 
-          <div>
-            <div className="cart-total-details">
-              <p>Subtotal</p>
-              <p>₹{getTotalCartAmount()}</p>
-            </div>
-
-            <div className="cart-total-details">
-              <p>Delivery Fee</p>
-              <p>₹{getTotalCartAmount() === 0 ? 0 : 49}</p>
-            </div>
-
-            <div className="cart-total-details">
-              <p>Discount</p>
-              <p>-₹{discount}</p>
-            </div>
-
-            <div className="cart-total-details">
-              <b>Total</b>
-              <b>
-                ₹
-                {getTotalCartAmount() === 0
-                  ? 0
-                  : Math.max(
-                      getTotalCartAmount() + 49 - discount,
-                      0
-                    )}
-              </b>
-            </div>
+          <div className="cart-total-details">
+            <p>Subtotal</p>
+            <p>₹{subtotal}</p>
           </div>
 
-          <button onClick={handleCheckout}>
-            PROCEED TO CHECKOUT
-          </button>
+          <div className="cart-total-details">
+            <p>Delivery Fee</p>
+            <p>₹{deliveryFee}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <p>Discount</p>
+            <p>-₹{discount}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <b>Total</b>
+            <b>₹{total}</b>
+          </div>
+
+          <button onClick={handleCheckout}>PROCEED TO CHECKOUT</button>
         </div>
 
-        {/* ---------------- PROMO CODE ---------------- */}
         <div className="cart-promo-code">
           <p>If you have a promo code, enter it here</p>
           <div className="cart-promocode-input">
             <input
               type="text"
-              placeholder="promo code"
+              placeholder="Promo code"
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
             />

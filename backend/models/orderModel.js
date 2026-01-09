@@ -1,22 +1,48 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  items: { type: Array, required: true },
-  amount: { type: Number, required: true },
-  address: { type: Object, required: true },
+const orderSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
 
-  // 👇 This status is shared by ADMIN + USER
-  status: {
-    type: String,
-    default: "Food Processing",
+    items: {
+      type: Array,
+      required: true,
+    },
+
+    amount: {
+      type: Number, // paise
+      required: true,
+    },
+
+    address: {
+      type: Object,
+      required: true,
+    },
+
+    status: {
+      type: String,
+      default: "Food Processing",
+      enum: [
+        "Food Processing",
+        "Out for delivery",
+        "Delivered",
+        "Cancelled",
+      ],
+    },
+
+    payment: {
+      type: Boolean,
+      default: false,
+    },
   },
+  { timestamps: true }
+);
 
-  date: { type: Date, default: Date.now },
-  payment: { type: Boolean, default: false },
-});
-
-// ✅ SAFE model creation (important for dev + prod)
+// ✅ SAFE MODEL
 const orderModel =
   mongoose.models.order || mongoose.model("order", orderSchema);
 

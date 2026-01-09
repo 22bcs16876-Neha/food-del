@@ -13,17 +13,16 @@ const router = express.Router();
 
 /* ================= USER ================= */
 
-// Place order → user must be logged in
+// Place order (needs login)
 router.post("/place", authMiddleware, placeOrder);
 
 // 🔥 VERIFY PAYMENT (NO authMiddleware)
 router.post("/verify", verifyOrder);
 
-// Get user's orders
+// Get logged-in user's orders
 router.get("/userorders", authMiddleware, userOrders);
 
 /* ================= ADMIN ================= */
-
 router.get("/list", authMiddleware, listOrders);
 router.post("/status", authMiddleware, updateStatus);
 

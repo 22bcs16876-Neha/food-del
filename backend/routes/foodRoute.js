@@ -1,16 +1,24 @@
 import express from "express";
-import {
-  addToCart,
-  removeFromCart,
-  getCart,
-} from "../controllers/cartControllers.js";
-import authMiddleware from "../middleware/auth.js";
+import { addFood,listFood,removeFood } from "../controllers/foodController.js"
+import multer from "multer";
 
-const cartRouter = express.Router();
+const foodRouter = express.Router() //using thius we can create get , post etc methods
 
-// ✅ ALL CART ROUTES NEED AUTH
-cartRouter.post("/add", authMiddleware, addToCart);
-cartRouter.post("/remove", authMiddleware, removeFromCart);
-cartRouter.post("/get", authMiddleware, getCart);
+// foodRouter.Post("/add",addFood)  //post is used to send data on server, data gets processed and a response is received
+foodRouter.get("/list",listFood)
+foodRouter.post("/remove", removeFood)
+//Image Storage engine
 
-export default cartRouter;
+const Storage = multer.diskStorage({
+    destination: "uploads",
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+
+const upload = multer({ storage: Storage });
+foodRouter.post("/add", upload.single("image"), addFood);
+
+
+
+export default foodRouter; 

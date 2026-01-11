@@ -1,6 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModels.js";
-import foodModel from "../models/foodModel.js"; // ✅ IMPORTANT
+import foodModel from "../models/foodModel.js";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { items, address } = req.body; // ❌ amount REMOVED
+    const { items, address } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -18,7 +18,7 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    // 🔒 SECURE BACKEND CALCULATION
+    // 🔒 BACKEND PRICE CALCULATION (SECURE)
     let subtotal = 0;
 
     for (const item of items) {
@@ -29,11 +29,11 @@ export const placeOrder = async (req, res) => {
     }
 
     const DELIVERY_FEE = 49;
-    const DISCOUNT = 100; // same as frontend
+    const DISCOUNT = 100; // keep same as frontend
 
-    const totalAmount = subtotal + DELIVERY_FEE - DISCOUNT;
+    const totalAmount = Math.max(subtotal + DELIVERY_FEE - DISCOUNT, 0);
 
-    // 💾 Save order with BACKEND amount
+    // 💾 CREATE ORDER
     const order = await orderModel.create({
       userId,
       items,
@@ -43,9 +43,10 @@ export const placeOrder = async (req, res) => {
       status: "Food Processing",
     });
 
+    // 🧹 Clear cart
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    // 💳 Stripe session
+    // 💳 STRIPE CHECKOUT
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -53,8 +54,10 @@ export const placeOrder = async (req, res) => {
         {
           price_data: {
             currency: "inr",
-            product_data: { name: "Tomato Food Order" },
-            unit_amount: totalAmount * 100, // ✅ SAME amount
+            product_data: {
+              name: "Tomato Food Order",
+            },
+            unit_amount: totalAmount * 100,
           },
           quantity: 1,
         },
@@ -69,6 +72,48 @@ export const placeOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("PLACE ORDER ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+/* ================= VERIFY ORDER ================= */
+export const verifyOrder = async (req, res) => {
+  try {
+    const { orderId, session_id } = req.body;
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status === "paid") {
+      await orderModel.findByIdAndUpdate(orderId, {
+        payment: true,
+        status: "Order Placed",
+      });
+
+      return res.json({ success: true });
+    }
+
+    res.json({ success: false });
+  } catch (error) {
+    console.error("VERIFY ORDER ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+/* ================= USER ORDERS ================= */
+export const userOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({ userId: req.user.id });
+    res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Server error",

@@ -1,5 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModels.js";
+import foodModel from "../models/foodModel.js"; // ✅ IMPORTANT
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -8,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { items, amount, address } = req.body;
+    const { items, address } = req.body; // ❌ amount REMOVED
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -17,26 +18,26 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    // 🔒 BACKEND CALCULATION
-    let calculatedAmount = 0;
-    items.forEach((item) => {
-      calculatedAmount += item.price * item.quantity;
-    });
+    // 🔒 SECURE BACKEND CALCULATION
+    let subtotal = 0;
 
-    const DELIVERY_FEE = 49;
-    calculatedAmount += DELIVERY_FEE;
+    for (const item of items) {
+      const food = await foodModel.findById(item._id);
+      if (!food) continue;
 
-    if (calculatedAmount * 100 !== amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Amount mismatch",
-      });
+      subtotal += food.price * item.quantity;
     }
 
+    const DELIVERY_FEE = 49;
+    const DISCOUNT = 100; // same as frontend
+
+    const totalAmount = subtotal + DELIVERY_FEE - DISCOUNT;
+
+    // 💾 Save order with BACKEND amount
     const order = await orderModel.create({
       userId,
       items,
-      amount,
+      amount: totalAmount * 100, // store in paise
       address,
       payment: false,
       status: "Food Processing",
@@ -44,6 +45,7 @@ export const placeOrder = async (req, res) => {
 
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
+    // 💳 Stripe session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -52,7 +54,7 @@ export const placeOrder = async (req, res) => {
           price_data: {
             currency: "inr",
             product_data: { name: "Tomato Food Order" },
-            unit_amount: amount,
+            unit_amount: totalAmount * 100, // ✅ SAME amount
           },
           quantity: 1,
         },
@@ -67,53 +69,6 @@ export const placeOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("PLACE ORDER ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
-/* ================= VERIFY ORDER ================= */
-export const verifyOrder = async (req, res) => {
-  try {
-    const { orderId, session_id } = req.body;
-
-    const order = await orderModel.findById(orderId);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-
-    if (session.payment_status === "paid") {
-      order.payment = true;
-      await order.save();
-      return res.json({ success: true });
-    }
-
-    return res.json({ success: false });
-  } catch (error) {
-    console.error("VERIFY ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
-/* ================= USER ORDERS ================= */
-export const userOrders = async (req, res) => {
-  try {
-    const orders = await orderModel.find({ userId: req.user.id });
-    res.json({
-      success: true,
-      data: orders,
-    });
-  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Server error",

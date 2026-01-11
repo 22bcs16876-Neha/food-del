@@ -60,7 +60,7 @@ const PlaceOrder = () => {
     const orderData = {
       address: data,
       items: orderItems,
-      amount: total * 100, // ✅ FINAL amount in paise
+      // amount: total * 100, // ✅ FINAL amount in paise
     };
 
     try {
@@ -76,7 +76,216 @@ const PlaceOrder = () => {
 
       if (response.data.success) {
         window.location.replace(response.data.session_url);
+      } else {import React, { useContext, useState, useEffect } from "react";
+import "./PlaceOrder.css";
+import { StoreContext } from "../../context/storeContext";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+const PlaceOrder = () => {
+  const {
+    getTotalCartAmount,
+    token,
+    food_list,
+    cartItems,
+    url,
+    discount,
+  } = useContext(StoreContext);
+
+  const navigate = useNavigate();
+  const deliveryFee = 49;
+
+  const [data, setData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    street: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    country: "",
+    phone: "",
+  });
+
+  const subtotal = getTotalCartAmount();
+  const total = Math.max(subtotal + deliveryFee - discount, 0);
+
+  // Redirect if not logged in or cart empty
+  useEffect(() => {
+    if (!token || subtotal === 0) {
+      navigate("/cart");
+    }
+  }, [token, subtotal, navigate]);
+
+  const onChangeHandler = (e) => {
+    setData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const placeOrder = async (e) => {
+    e.preventDefault();
+
+    // ✅ Send ONLY id + quantity (secure)
+    const orderItems = food_list
+      .filter((item) => cartItems[item._id] > 0)
+      .map((item) => ({
+        _id: item._id,
+        quantity: cartItems[item._id],
+      }));
+
+    const orderData = {
+      address: data,
+      items: orderItems,
+      // ❌ amount NOT sent (backend calculates)
+    };
+
+    try {
+      const response = await axios.post(
+        `${url}/api/order/place`,
+        orderData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        window.location.href = response.data.session_url;
       } else {
+        toast.error(response.data.message || "Order failed ❌");
+      }
+    } catch (error) {
+      console.log("ORDER ERROR:", error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message || "Something went wrong ❌"
+      );
+    }
+  };
+
+  return (
+    <form onSubmit={placeOrder} className="place-order">
+      {/* LEFT */}
+      <div className="place-order-left">
+        <p className="title">Delivery Information</p>
+
+        <div className="multi-fields">
+          <input
+            name="firstName"
+            value={data.firstName}
+            onChange={onChangeHandler}
+            placeholder="First Name"
+            required
+          />
+          <input
+            name="lastName"
+            value={data.lastName}
+            onChange={onChangeHandler}
+            placeholder="Last Name"
+            required
+          />
+        </div>
+
+        <input
+          name="email"
+          type="email"
+          value={data.email}
+          onChange={onChangeHandler}
+          placeholder="Email"
+          required
+        />
+
+        <input
+          name="street"
+          value={data.street}
+          onChange={onChangeHandler}
+          placeholder="Street"
+          required
+        />
+
+        <div className="multiple-fields">
+          <input
+            name="city"
+            value={data.city}
+            onChange={onChangeHandler}
+            placeholder="City"
+            required
+          />
+          <input
+            name="state"
+            value={data.state}
+            onChange={onChangeHandler}
+            placeholder="State"
+            required
+          />
+        </div>
+
+        <div className="multiple-fields">
+          <input
+            name="zipcode"
+            value={data.zipcode}
+            onChange={onChangeHandler}
+            placeholder="Zip Code"
+            required
+          />
+          <input
+            name="country"
+            value={data.country}
+            onChange={onChangeHandler}
+            placeholder="Country"
+            required
+          />
+        </div>
+
+        <input
+          name="phone"
+          type="tel"
+          value={data.phone}
+          onChange={onChangeHandler}
+          placeholder="Phone"
+          required
+        />
+      </div>
+
+      {/* RIGHT */}
+      <div className="place-order-right">
+        <div className="cart-total">
+          <h2>Cart Total</h2>
+
+          <div className="cart-total-details">
+            <p>Subtotal</p>
+            <p>₹{subtotal}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <p>Delivery Fee</p>
+            <p>₹{subtotal === 0 ? 0 : deliveryFee}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <p>Discount</p>
+            <p>-₹{discount}</p>
+          </div>
+
+          <div className="cart-total-details">
+            <b>Total</b>
+            <b>₹{total}</b>
+          </div>
+
+          <button type="submit" disabled={subtotal === 0}>
+            PROCEED TO PAYMENT
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+};
+
+export default PlaceOrder;
+
         toast.error(response.data.message || "Order failed ❌");
       }
     } catch (error) {
